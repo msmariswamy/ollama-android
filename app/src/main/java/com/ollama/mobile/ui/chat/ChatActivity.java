@@ -1,12 +1,14 @@
 package com.ollama.mobile.ui.chat;
 
-import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Bundle;
+import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,8 +18,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -49,7 +49,12 @@ public class ChatActivity extends AppCompatActivity {
     private AttachmentChipAdapter attachmentChipAdapter;
     private SidebarController sidebarController;
     private View emptyChatView;
-    private ActivityResultLauncher<Intent> speechLauncher;
+    private SpeechRecognizer speechRecognizer;
+    private static final int[] MUTED_STREAMS = {
+            AudioManager.STREAM_NOTIFICATION,
+            AudioManager.STREAM_RING
+    };
+    private final int[] savedStreamVolumes = new int[MUTED_STREAMS.length];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,21 +62,32 @@ public class ChatActivity extends AppCompatActivity {
         binding = ActivityChatBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        speechLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(), result -> {
-                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                        ArrayList<String> matches = result.getData()
-                                .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                        if (matches != null && !matches.isEmpty()) {
-                            String text = matches.get(0).trim();
-                            if (!text.isEmpty()) {
-                                binding.etInput.setText(text);
-                                binding.etInput.setSelection(text.length());
-                                binding.etInput.requestFocus();
-                            }
+        if (SpeechRecognizer.isRecognitionAvailable(this)) {
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+            speechRecognizer.setRecognitionListener(new RecognitionListener() {
+                @Override public void onReadyForSpeech(Bundle params) {}
+                @Override public void onBeginningOfSpeech() {}
+                @Override public void onRmsChanged(float rmsdB) {}
+                @Override public void onBufferReceived(byte[] buffer) {}
+                @Override public void onEndOfSpeech() {}
+                @Override public void onError(int error) { unmuteAudio(); }
+                @Override public void onPartialResults(Bundle partialResults) {}
+                @Override public void onEvent(int eventType, Bundle params) {}
+                @Override
+                public void onResults(Bundle results) {
+                    unmuteAudio();
+                    ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                    if (matches != null && !matches.isEmpty()) {
+                        String text = matches.get(0).trim();
+                        if (!text.isEmpty()) {
+                            binding.etInput.setText(text);
+                            binding.etInput.setSelection(text.length());
+                            binding.etInput.requestFocus();
                         }
                     }
-                });
+                }
+            });
+        }
 
         // Edge-to-edge: let the app draw behind system bars
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
@@ -273,16 +289,31 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void startVoiceInput() {
+        if (speechRecognizer == null) {
+            Toast.makeText(this, "Speech recognition not available on this device",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        muteAudio();
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak your message…");
         intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
-        try {
-            speechLauncher.launch(intent);
-        } catch (ActivityNotFoundException e) {
-            Toast.makeText(this, "Speech recognition not available on this device",
-                    Toast.LENGTH_SHORT).show();
+        speechRecognizer.startListening(intent);
+    }
+
+    private void muteAudio() {
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        for (int i = 0; i < MUTED_STREAMS.length; i++) {
+            savedStreamVolumes[i] = am.getStreamVolume(MUTED_STREAMS[i]);
+            am.setStreamVolume(MUTED_STREAMS[i], 0, 0);
+        }
+    }
+
+    private void unmuteAudio() {
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        for (int i = 0; i < MUTED_STREAMS.length; i++) {
+            am.setStreamVolume(MUTED_STREAMS[i], savedStreamVolumes[i], 0);
         }
     }
 
@@ -498,5 +529,13 @@ public class ChatActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         viewModel.refreshSelectedModel();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (speechRecognizer != null) {
+            speechRecognizer.destroy();
+        }
     }
 }

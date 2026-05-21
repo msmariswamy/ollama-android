@@ -57,8 +57,6 @@ public class SettingsActivity extends AppCompatActivity {
         setupDarkMode();
         binding.cardModels.setOnClickListener(v ->
                 startActivity(new Intent(this, ModelLibraryActivity.class)));
-        binding.cardInterviewAssistant.setOnClickListener(v ->
-                startActivity(new Intent(this, com.ollama.mobile.ui.interview.InterviewSetupActivity.class)));
 
         viewModel.checkConnection();
     }

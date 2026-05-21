@@ -11,6 +11,9 @@ import android.os.Looper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import android.widget.AdapterView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,7 +28,10 @@ import com.google.android.material.snackbar.Snackbar;
 import com.ollama.mobile.R;
 import com.ollama.mobile.data.db.entity.Conversation;
 import com.ollama.mobile.databinding.ActivityConversationListBinding;
+import com.ollama.mobile.model.InterviewRole;
 import com.ollama.mobile.ui.chat.ChatActivity;
+import com.ollama.mobile.ui.interview.InterviewActivity;
+import com.ollama.mobile.ui.interview.InterviewHomepageViewModel;
 import com.ollama.mobile.ui.settings.SettingsActivity;
 
 import java.util.ArrayList;
@@ -36,6 +42,7 @@ public class ConversationListActivity extends AppCompatActivity {
 
     private ActivityConversationListBinding binding;
     private ConversationListViewModel viewModel;
+    private InterviewHomepageViewModel interviewViewModel;
     private ConversationAdapter adapter;
 
     private List<Conversation> latestActive = new ArrayList<>();
@@ -45,6 +52,11 @@ public class ConversationListActivity extends AppCompatActivity {
     private Runnable pendingDelete;
 
     private String activeFolder = "All";
+
+    private List<InterviewRole> interviewRoles = new ArrayList<>();
+    private List<String> cloudModelNames = new ArrayList<>();
+    private ArrayAdapter<String> modelSpinnerAdapter;
+    private ArrayAdapter<String> roleSpinnerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +86,117 @@ public class ConversationListActivity extends AppCompatActivity {
         });
 
         binding.fabNewChat.setOnClickListener(v -> openNewChat());
+
+        setupInterviewSection();
+    }
+
+    private void setupInterviewSection() {
+        interviewViewModel = new ViewModelProvider(this).get(InterviewHomepageViewModel.class);
+
+        // Expand/collapse state
+        boolean expanded = interviewViewModel.isInterviewSectionExpanded();
+        binding.interviewSectionBody.setVisibility(expanded ? View.VISIBLE : View.GONE);
+        binding.ivInterviewExpand.setRotation(expanded ? 180f : 0f);
+
+        binding.interviewSectionHeader.setOnClickListener(v -> {
+            boolean isExpanded = binding.interviewSectionBody.getVisibility() == View.VISIBLE;
+            boolean nowExpanded = !isExpanded;
+            binding.interviewSectionBody.setVisibility(nowExpanded ? View.VISIBLE : View.GONE);
+            binding.ivInterviewExpand.animate().rotation(nowExpanded ? 180f : 0f).setDuration(200).start();
+            interviewViewModel.setInterviewSectionExpanded(nowExpanded);
+        });
+
+        // Model spinner setup
+        modelSpinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, cloudModelNames);
+        modelSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.spinnerInterviewModel.setAdapter(modelSpinnerAdapter);
+
+        // Role spinner setup
+        interviewRoles = interviewViewModel.loadRoles();
+        List<String> roleTitles = new ArrayList<>();
+        for (InterviewRole r : interviewRoles) roleTitles.add(r.title);
+        roleTitles.add("Custom");
+        roleSpinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, roleTitles);
+        roleSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.spinnerInterviewRole.setAdapter(roleSpinnerAdapter);
+
+        binding.spinnerInterviewRole.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+                boolean isCustom = pos == interviewRoles.size();
+                binding.tilCustomRole.setVisibility(isCustom ? View.VISIBLE : View.GONE);
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        // Observe cloud models
+        interviewViewModel.getApiKeyMissing().observe(this, missing -> {
+            if (Boolean.TRUE.equals(missing)) {
+                binding.tvInterviewApiKeyWarning.setVisibility(View.VISIBLE);
+                binding.spinnerInterviewModel.setEnabled(false);
+                binding.btnStartInterviewSession.setEnabled(false);
+            } else {
+                binding.tvInterviewApiKeyWarning.setVisibility(View.GONE);
+                binding.spinnerInterviewModel.setEnabled(true);
+                binding.btnStartInterviewSession.setEnabled(true);
+            }
+        });
+
+        interviewViewModel.getCloudModels().observe(this, models -> {
+            cloudModelNames.clear();
+            if (models != null) cloudModelNames.addAll(models);
+            modelSpinnerAdapter.notifyDataSetChanged();
+
+            // Pre-select saved model
+            String saved = interviewViewModel.getSavedInterviewModel();
+            if (!saved.isEmpty()) {
+                int idx = cloudModelNames.indexOf(saved);
+                if (idx >= 0) binding.spinnerInterviewModel.setSelection(idx);
+            }
+        });
+
+        // Start Session button
+        binding.btnStartInterviewSession.setOnClickListener(v -> {
+            int modelIdx = binding.spinnerInterviewModel.getSelectedItemPosition();
+            if (cloudModelNames.isEmpty() || modelIdx < 0 || modelIdx >= cloudModelNames.size()) {
+                Snackbar.make(binding.getRoot(), "Select a cloud model first", Snackbar.LENGTH_SHORT).show();
+                return;
+            }
+            String selectedModel = cloudModelNames.get(modelIdx);
+            interviewViewModel.saveInterviewModel(selectedModel);
+
+            int roleIdx = binding.spinnerInterviewRole.getSelectedItemPosition();
+            String customName = "";
+            InterviewRole role;
+            if (roleIdx >= interviewRoles.size()) {
+                // Custom
+                customName = binding.etCustomRole.getText() != null
+                        ? binding.etCustomRole.getText().toString().trim() : "";
+                if (customName.isEmpty()) {
+                    Snackbar.make(binding.getRoot(), "Enter a custom role name", Snackbar.LENGTH_SHORT).show();
+                    return;
+                }
+                role = InterviewRole.CUSTOM;
+            } else {
+                role = interviewRoles.get(roleIdx);
+            }
+
+            Intent intent = new Intent(this, InterviewActivity.class);
+            intent.putExtra(InterviewActivity.EXTRA_ROLE_ID, role.id);
+            intent.putExtra(InterviewActivity.EXTRA_ROLE_TITLE, role.title);
+            intent.putExtra(InterviewActivity.EXTRA_ROLE_DESCRIPTION, role.description);
+            if (role.technicalSkills != null) {
+                intent.putExtra(InterviewActivity.EXTRA_ROLE_SKILLS,
+                        role.technicalSkills.toArray(new String[0]));
+            }
+            intent.putExtra(InterviewActivity.EXTRA_CUSTOM_NAME, customName);
+            intent.putExtra(InterviewActivity.EXTRA_CLOUD_MODEL, selectedModel);
+            startActivity(intent);
+        });
+
+        // Load cloud models
+        interviewViewModel.loadCloudModels();
     }
 
     private void updateEmptyView() {

@@ -24,11 +24,19 @@ import java.util.Arrays;
 
 public class InterviewActivity extends AppCompatActivity {
 
+    public static final String EXTRA_ROLE_ID = "role_id";
+    public static final String EXTRA_ROLE_TITLE = "role_title";
+    public static final String EXTRA_ROLE_DESCRIPTION = "role_description";
+    public static final String EXTRA_ROLE_SKILLS = "role_skills";
+    public static final String EXTRA_CUSTOM_NAME = "custom_name";
+    public static final String EXTRA_CLOUD_MODEL = "cloud_model";
+
     private ActivityInterviewBinding binding;
     private InterviewViewModel viewModel;
 
     private InterviewRole selectedRole;
     private String customRoleName;
+    private String cloudModel;
 
     private final ActivityResultLauncher<String> requestMicPermission =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
@@ -70,11 +78,12 @@ public class InterviewActivity extends AppCompatActivity {
 
     private void extractIntentExtras() {
         Intent intent = getIntent();
-        String roleId = intent.getStringExtra(InterviewSetupActivity.EXTRA_ROLE_ID);
-        String roleTitle = intent.getStringExtra(InterviewSetupActivity.EXTRA_ROLE_TITLE);
-        String roleDescription = intent.getStringExtra(InterviewSetupActivity.EXTRA_ROLE_DESCRIPTION);
-        String[] skillsArray = intent.getStringArrayExtra(InterviewSetupActivity.EXTRA_ROLE_SKILLS);
-        customRoleName = intent.getStringExtra(InterviewSetupActivity.EXTRA_CUSTOM_NAME);
+        String roleId = intent.getStringExtra(EXTRA_ROLE_ID);
+        String roleTitle = intent.getStringExtra(EXTRA_ROLE_TITLE);
+        String roleDescription = intent.getStringExtra(EXTRA_ROLE_DESCRIPTION);
+        String[] skillsArray = intent.getStringArrayExtra(EXTRA_ROLE_SKILLS);
+        customRoleName = intent.getStringExtra(EXTRA_CUSTOM_NAME);
+        cloudModel = intent.getStringExtra(EXTRA_CLOUD_MODEL);
 
         selectedRole = new InterviewRole(
                 roleId != null ? roleId : "custom",
@@ -91,7 +100,7 @@ public class InterviewActivity extends AppCompatActivity {
     }
 
     private void startSession() {
-        viewModel.startSession(selectedRole, customRoleName);
+        viewModel.startSession(selectedRole, customRoleName, cloudModel != null ? cloudModel : "");
     }
 
     private void observeViewModel() {

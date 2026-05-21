@@ -541,53 +541,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Interview Assistant Link Row -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardInterviewAssistant"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/colorCard"
-                app:cardCornerRadius="16dp"
-                app:strokeColor="@color/colorBorder"
-                app:strokeWidth="1dp"
-                app:cardElevation="0dp"
-                android:clickable="true"
-                android:focusable="true">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_interview"
-                        android:contentDescription="@null"
-                        android:tint="@color/colorPrimary"
-                        android:layout_marginEnd="12dp"/>
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Interview Assistant"
-                        android:textColor="@color/colorTextPrimary"
-                        android:textSize="14sp"/>
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_expand_more"
-                        android:rotation="-90"
-                        android:contentDescription="@null"
-                        android:tint="@color/colorTextMuted"/>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSave"
                 android:layout_width="match_parent"

@@ -38,7 +38,6 @@
         <activity android:name=".ui.model.ModelLibraryActivity" android:exported="false" />
         <activity android:name=".ui.chat.SearchActivity" android:exported="false"
             android:windowSoftInputMode="stateAlwaysVisible"/>
-        <activity android:name=".ui.interview.InterviewSetupActivity" android:exported="false"/>
         <activity android:name=".ui.interview.InterviewActivity" android:exported="false"/>
 
         <service

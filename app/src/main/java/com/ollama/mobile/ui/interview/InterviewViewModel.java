@@ -40,6 +40,7 @@ public class InterviewViewModel extends AndroidViewModel {
 
     private InterviewRole activeRole;
     private String customRoleName = "";
+    private String activeCloudModel = "";
 
     private final Runnable autoSuggestRunnable = new Runnable() {
         @Override
@@ -63,9 +64,10 @@ public class InterviewViewModel extends AndroidViewModel {
         return repository.loadRoles(getApplication());
     }
 
-    public void startSession(InterviewRole role, String customName) {
+    public void startSession(InterviewRole role, String customName, String cloudModel) {
         activeRole = role;
         customRoleName = customName != null ? customName : "";
+        activeCloudModel = cloudModel != null ? cloudModel : "";
         selectedRole.setValue(role);
         sessionState.setValue(SessionState.ACTIVE);
 
@@ -88,7 +90,7 @@ public class InterviewViewModel extends AndroidViewModel {
     public void getSuggestions() {
         if (activeRole == null) return;
         handler.removeCallbacks(autoSuggestRunnable);
-        repository.getCoachingSuggestions(activeRole, customRoleName);
+        repository.getCoachingSuggestions(activeRole, customRoleName, activeCloudModel);
         if (sessionState.getValue() == SessionState.ACTIVE) {
             handler.postDelayed(autoSuggestRunnable, AUTO_SUGGEST_INTERVAL_MS);
         }

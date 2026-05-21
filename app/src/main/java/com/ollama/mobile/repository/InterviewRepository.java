@@ -2,6 +2,7 @@ package com.ollama.mobile.repository;
 
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -18,7 +19,15 @@ import com.ollama.mobile.model.ChatMessage;
 import com.ollama.mobile.model.ChatRequest;
 import com.ollama.mobile.model.InterviewRole;
 import com.ollama.mobile.model.RolesConfig;
+import com.ollama.mobile.network.OllamaApiService;
 import com.ollama.mobile.network.OllamaClient;
+
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -37,12 +46,14 @@ public class InterviewRepository {
 
     private static final String TAG = "InterviewRepository";
     private static final int ROLLING_WINDOW = 40;
+    private static final String CLOUD_BASE_URL = "https://api.ollama.com/";
 
     private final OllamaClient ollamaClient;
     private final SettingsRepository settingsRepository;
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
+    private AudioManager audioManager;
     private SpeechRecognizer speechRecognizer;
     private volatile boolean sessionActive = false;
 
@@ -97,6 +108,7 @@ public class InterviewRepository {
         rollingLines.clear();
         transcript.postValue("");
 
+        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
         speechRecognizer.setRecognitionListener(new InterviewRecognitionListener(context));
         beginListening();
@@ -112,7 +124,14 @@ public class InterviewRepository {
         intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false);
         mainHandler.post(() -> {
             if (sessionActive && speechRecognizer != null) {
+                if (audioManager != null) {
+                    audioManager.adjustStreamVolume(AudioManager.STREAM_NOTIFICATION, AudioManager.ADJUST_MUTE, 0);
+                }
                 speechRecognizer.startListening(intent);
+                if (audioManager != null) {
+                    mainHandler.postDelayed(() -> audioManager.adjustStreamVolume(
+                            AudioManager.STREAM_NOTIFICATION, AudioManager.ADJUST_UNMUTE, 0), 100);
+                }
             }
         });
     }
@@ -172,7 +191,7 @@ public class InterviewRepository {
 
     // ── Coaching Suggestions ────────────────────────────────────────────────
 
-    public void getCoachingSuggestions(InterviewRole role, String customRoleName) {
+    public void getCoachingSuggestions(InterviewRole role, String customRoleName, String cloudModel) {
         if (rollingLines.isEmpty()) return;
 
         suggestionsLoading.postValue(true);
@@ -190,12 +209,12 @@ public class InterviewRepository {
 
                 String prompt = buildCoachingPrompt(roleName, roleDescription, skillsText, lines);
 
-                String model = settingsRepository.getSelectedModel();
                 List<ChatMessage> messages = new ArrayList<>();
                 messages.add(new ChatMessage(ChatMessage.ROLE_USER, prompt));
 
-                ChatRequest request = new ChatRequest(model, messages, false);
-                Response<ResponseBody> response = ollamaClient.getApiService().chat(request).execute();
+                ChatRequest request = new ChatRequest(cloudModel, messages, false);
+                OllamaApiService cloudApi = buildCloudApiService();
+                Response<ResponseBody> response = cloudApi.chat(request).execute();
 
                 if (response.isSuccessful() && response.body() != null) {
                     String body = response.body().string();
@@ -204,15 +223,37 @@ public class InterviewRepository {
                     suggestions.postValue(content);
                 } else {
                     Log.e(TAG, "Coaching call failed HTTP " + response.code());
-                    suggestions.postValue("Couldn't get suggestions — check Ollama connection.");
+                    suggestions.postValue("Couldn't get suggestions — check cloud connection.");
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Coaching call error", e);
-                suggestions.postValue("Couldn't get suggestions — check Ollama connection.");
+                suggestions.postValue("Couldn't get suggestions — check cloud connection.");
             } finally {
                 suggestionsLoading.postValue(false);
             }
         });
+    }
+
+    private OllamaApiService buildCloudApiService() {
+        String apiKey = settingsRepository.getApiKey();
+        OkHttpClient httpClient = new OkHttpClient.Builder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(300, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .addInterceptor(chain -> {
+                    Request.Builder builder = chain.request().newBuilder();
+                    if (apiKey != null && !apiKey.isEmpty()) {
+                        builder.header("Authorization", "Bearer " + apiKey);
+                    }
+                    return chain.proceed(builder.build());
+                })
+                .build();
+        return new Retrofit.Builder()
+                .baseUrl(CLOUD_BASE_URL)
+                .client(httpClient)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(OllamaApiService.class);
     }
 
     private String buildCoachingPrompt(String roleName, String roleDescription, String skillsText, List<String> lines) {

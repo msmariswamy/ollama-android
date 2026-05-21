@@ -26,6 +26,8 @@ public class SettingsRepository {
     private static final String KEY_CTX_LENGTH = "pref_ctx_length";
     private static final String KEY_DARK_MODE = "pref_dark_mode";
     private static final String KEY_SYSTEM_PROMPT = "pref_system_prompt";
+    private static final String KEY_INTERVIEW_CLOUD_MODEL = "interview_cloud_model";
+    private static final String KEY_INTERVIEW_SECTION_EXPANDED = "interview_section_expanded";
 
     public static final int DARK_MODE_SYSTEM = 0;
     public static final int DARK_MODE_LIGHT = 1;
@@ -180,6 +182,24 @@ public class SettingsRepository {
 
     public void setSystemPromptGlobal(String prompt) {
         prefs.edit().putString(KEY_SYSTEM_PROMPT, prompt).apply();
+    }
+
+    // ── Interview assistant ───────────────────────────────────────────────────
+
+    public String getInterviewCloudModel() {
+        return prefs.getString(KEY_INTERVIEW_CLOUD_MODEL, "");
+    }
+
+    public void setInterviewCloudModel(String model) {
+        prefs.edit().putString(KEY_INTERVIEW_CLOUD_MODEL, model).apply();
+    }
+
+    public boolean isInterviewSectionExpanded() {
+        return prefs.getBoolean(KEY_INTERVIEW_SECTION_EXPANDED, true);
+    }
+
+    public void setInterviewSectionExpanded(boolean expanded) {
+        prefs.edit().putBoolean(KEY_INTERVIEW_SECTION_EXPANDED, expanded).apply();
     }
 
     // ── Utilities ─────────────────────────────────────────────────────────────
