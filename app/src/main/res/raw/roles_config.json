@@ -1,0 +1,54 @@
+{
+  "java": {
+    "title": "Java Architect and Technical Lead",
+    "specialization": "senior Java engineering roles",
+    "description": "He should know Java, Spring Boot, Microservices, System Design, and Architecture. He should have experience leading teams and making technical decisions. He should have a deep understanding of Java and backend development, as well as experience with system design and architecture. He should also possess strong leadership qualities and have AI experience including LLMs, RAG, and vector databases.",
+    "technical_skills": [
+      "**Java & Backend Expertise**",
+      "**System Design & Architecture**",
+      "**Problem-Solving Ability**",
+      "**Knowledge of AI & LLMs**",
+      "**Authentication & Authorization (OAuth, SSO, Session Security)**",
+      "**Knowledge Depth & Accuracy**"
+    ]
+  },
+  "android": {
+    "title": "Android Architect and Technical Lead",
+    "specialization": "senior Android engineering roles",
+    "description": "He should have deep expertise in Android SDK, Kotlin, and Java for Android. He should know Jetpack libraries (Compose, ViewModel, Room, WorkManager, Navigation), MVVM/MVI architecture patterns, and Coroutines/Flow for async programming. He should understand app performance, memory management, battery optimization, and security best practices. He should have experience with CI/CD pipelines for mobile (Fastlane, GitHub Actions), Play Store deployment, modularization, and leading Android teams.",
+    "technical_skills": [
+      "**Android SDK & Kotlin Expertise**",
+      "**Architecture Patterns (MVVM/MVI/Clean Architecture)**",
+      "**Jetpack & Modern Android Development**",
+      "**Performance, Memory & Battery Optimization**",
+      "**Security, Authentication & Data Protection**",
+      "**Testing (Unit, Integration, UI with Espresso/Compose)**"
+    ]
+  },
+  "ios": {
+    "title": "iOS Architect and Technical Lead",
+    "specialization": "senior iOS engineering roles",
+    "description": "He should have deep expertise in Swift and Objective-C, UIKit, and SwiftUI. He should know MVVM, VIPER, and Clean Architecture patterns, and be proficient with Combine and Swift Concurrency (async/await). He should understand Core Data, Keychain, App Extensions, and iOS security best practices. He should have experience with Xcode, TestFlight, App Store distribution, CI/CD (Fastlane, Xcode Cloud), and leading iOS teams through major architectural decisions.",
+    "technical_skills": [
+      "**Swift & iOS SDK Expertise**",
+      "**Architecture Patterns (MVVM/VIPER/Clean Architecture)**",
+      "**SwiftUI & Combine / Async-Await**",
+      "**Performance, Memory Management & App Size Optimization**",
+      "**Security, Keychain & Data Protection**",
+      "**Testing (XCTest, UI Testing, TDD practices)**"
+    ]
+  },
+  "reactnative": {
+    "title": "React Native Architect and Technical Lead",
+    "specialization": "senior React Native / cross-platform mobile engineering roles",
+    "description": "He should have deep expertise in React Native, TypeScript, and JavaScript. He should understand the React Native bridge/new architecture (JSI, Fabric, TurboModules), state management (Redux, Zustand, React Query), and navigation patterns. He should know how to write native modules (Kotlin/Swift), integrate with native SDKs, optimize app performance (bundle size, render performance, Hermes), and handle platform-specific differences. He should have experience with Expo, OTA updates (CodePush), CI/CD, and leading cross-platform teams.",
+    "technical_skills": [
+      "**React Native & TypeScript Expertise**",
+      "**Architecture & State Management (Redux/Zustand/React Query)**",
+      "**New Architecture (JSI, Fabric, TurboModules)**",
+      "**Native Modules & Platform Integration (Android/iOS)**",
+      "**Performance Optimization (Bundle, Render, Hermes)**",
+      "**Testing (Jest, Detox, React Native Testing Library)**"
+    ]
+  }
+}
