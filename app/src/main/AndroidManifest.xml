@@ -33,6 +33,7 @@
             android:exported="false"
             android:windowSoftInputMode="adjustNothing" />
         <activity android:name=".ui.settings.SettingsActivity" android:exported="false" />
+        <activity android:name=".ui.model.ModelLibraryActivity" android:exported="false" />
         <activity android:name=".ui.chat.SearchActivity" android:exported="false"
             android:windowSoftInputMode="stateAlwaysVisible"/>
 

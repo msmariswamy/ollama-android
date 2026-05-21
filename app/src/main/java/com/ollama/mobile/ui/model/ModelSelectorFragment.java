@@ -60,7 +60,8 @@ public class ModelSelectorFragment extends BottomSheetDialogFragment {
 
         binding.btnRetry.setOnClickListener(v -> viewModel.loadModels());
 
-        viewModel.modelsResult.observe(getViewLifecycleOwner(), result -> {
+        viewModel.modelsWithMeta.observe(getViewLifecycleOwner(), result -> {
+            if (result == null) return;
             switch (result.status) {
                 case LOADING:
                     binding.progressBar.setVisibility(View.VISIBLE);
@@ -76,7 +77,8 @@ public class ModelSelectorFragment extends BottomSheetDialogFragment {
                     } else {
                         binding.tvEmpty.setVisibility(View.GONE);
                         binding.rvModels.setVisibility(View.VISIBLE);
-                        adapter.setModels(result.data);
+                        String current = viewModel.selectedModel.getValue();
+                        adapter.setModelsWithMeta(result.data, current);
                     }
                     break;
                 case ERROR:

@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.chip.Chip;
 import com.google.android.material.snackbar.Snackbar;
 import com.ollama.mobile.R;
 import com.ollama.mobile.data.db.entity.Conversation;
@@ -29,6 +30,7 @@ import com.ollama.mobile.ui.settings.SettingsActivity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ConversationListActivity extends AppCompatActivity {
 
@@ -41,6 +43,8 @@ public class ConversationListActivity extends AppCompatActivity {
 
     private final Handler deleteHandler = new Handler(Looper.getMainLooper());
     private Runnable pendingDelete;
+
+    private String activeFolder = "All";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,14 +64,13 @@ public class ConversationListActivity extends AppCompatActivity {
 
         viewModel.conversations.observe(this, conversations -> {
             latestActive = conversations != null ? conversations : new ArrayList<>();
-            adapter.setData(latestActive, latestArchived);
-            updateEmptyView();
+            setupFolderChips();
+            applyFolderFilter();
         });
 
         viewModel.archivedConversations.observe(this, archived -> {
             latestArchived = archived != null ? archived : new ArrayList<>();
-            adapter.setData(latestActive, latestArchived);
-            updateEmptyView();
+            applyFolderFilter();
         });
 
         binding.fabNewChat.setOnClickListener(v -> openNewChat());
@@ -75,6 +78,76 @@ public class ConversationListActivity extends AppCompatActivity {
 
     private void updateEmptyView() {
         boolean empty = latestActive.isEmpty() && latestArchived.isEmpty();
+        binding.tvEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
+    }
+
+    private boolean folderChipsInitialized = false;
+
+    private void setupFolderChips() {
+        if (folderChipsInitialized) return;
+        folderChipsInitialized = true;
+
+        long now = System.currentTimeMillis();
+        long todayStart = now - (now % 86_400_000L);
+        long weekStart = now - 7L * 86_400_000L;
+
+        long todayCount = latestActive.stream().filter(c -> c.updatedAt >= todayStart).count();
+        long weekCount = latestActive.stream().filter(c -> c.updatedAt >= weekStart && c.updatedAt < todayStart).count();
+
+        String[][] folders = {
+                {"All", String.valueOf(latestActive.size())},
+                {"Today", String.valueOf(todayCount)},
+                {"This week", String.valueOf(weekCount)},
+                {"Archived", String.valueOf(latestArchived.size())}
+        };
+
+        binding.chipGroupFolders.removeAllViews();
+        for (String[] f : folders) {
+            Chip chip = new Chip(this);
+            chip.setText(f[0] + "  " + f[1]);
+            chip.setCheckable(true);
+            chip.setChecked("All".equals(f[0]));
+            chip.setChipBackgroundColorResource(R.color.colorCard);
+            chip.setTextColor(getColor(R.color.colorTextPrimary));
+            binding.chipGroupFolders.addView(chip);
+            chip.setOnClickListener(v -> {
+                activeFolder = f[0];
+                applyFolderFilter();
+            });
+        }
+    }
+
+    private void applyFolderFilter() {
+        long now = System.currentTimeMillis();
+        long todayStart = now - (now % 86_400_000L);
+        long weekStart = now - 7L * 86_400_000L;
+
+        List<Conversation> filtered;
+        List<Conversation> archivedFiltered = new ArrayList<>();
+
+        switch (activeFolder) {
+            case "Today":
+                filtered = latestActive.stream()
+                        .filter(c -> c.updatedAt >= todayStart)
+                        .collect(Collectors.toList());
+                break;
+            case "This week":
+                filtered = latestActive.stream()
+                        .filter(c -> c.updatedAt >= weekStart && c.updatedAt < todayStart)
+                        .collect(Collectors.toList());
+                break;
+            case "Archived":
+                filtered = new ArrayList<>();
+                archivedFiltered = latestArchived;
+                break;
+            default:
+                filtered = latestActive;
+                archivedFiltered = latestArchived;
+                break;
+        }
+
+        adapter.setData(filtered, archivedFiltered);
+        boolean empty = filtered.isEmpty() && archivedFiltered.isEmpty();
         binding.tvEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
     }
 

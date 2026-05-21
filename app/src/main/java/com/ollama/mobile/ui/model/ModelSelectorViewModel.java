@@ -16,6 +16,7 @@ import java.util.List;
 public class ModelSelectorViewModel extends AndroidViewModel {
 
     public final MutableLiveData<NetworkResult<List<String>>> modelsResult = new MutableLiveData<>();
+    public final MutableLiveData<NetworkResult<List<com.ollama.mobile.model.OllamaModel>>> modelsWithMeta = new MutableLiveData<>();
     public final MutableLiveData<String> selectedModel = new MutableLiveData<>();
 
     ModelRepository modelRepository;
@@ -40,12 +41,14 @@ public class ModelSelectorViewModel extends AndroidViewModel {
 
     public void loadModels() {
         modelsResult.postValue(NetworkResult.loading());
+        modelsWithMeta.postValue(NetworkResult.loading());
         if (!skipServiceRebuild) {
             modelRepository.updateApiService(
                     ((OllamaApp) getApplication()).getAppContainer().ollamaClient.getApiService()
             );
         }
         modelRepository.fetchModels(result -> modelsResult.postValue(result));
+        modelRepository.fetchModelsWithMeta(result -> modelsWithMeta.postValue(result));
     }
 
     public void selectModel(String model) {

@@ -38,6 +38,10 @@ public class ChatViewModel extends AndroidViewModel {
     public final MutableLiveData<Boolean> isProcessingAttachments = new MutableLiveData<>(false);
     public final MutableLiveData<String> conversationTitle = new MutableLiveData<>("");
     public final MutableLiveData<String> systemPrompt = new MutableLiveData<>(null);
+    public final MutableLiveData<Integer> tokensPerSecond = new MutableLiveData<>(null);
+
+    private long streamStartTimeMs = 0;
+    private int totalCharsReceived = 0;
 
     ChatRepository chatRepository;
     ConversationRepository conversationRepository;
@@ -255,7 +259,16 @@ public class ChatViewModel extends AndroidViewModel {
 
         final int assistantIndex = current.size() - 1;
 
-        chatRepository.sendMessage(model, apiMessages, new ChatRepository.StreamCallback() {
+        com.ollama.mobile.model.ChatRequest.Options options = new com.ollama.mobile.model.ChatRequest.Options(
+                settingsRepository.getTemperature(),
+                settingsRepository.getTopP(),
+                settingsRepository.getContextLength()
+        );
+
+        streamStartTimeMs = 0;
+        totalCharsReceived = 0;
+
+        chatRepository.sendMessage(model, apiMessages, options, new ChatRepository.StreamCallback() {
             private final StringBuilder fullResponse = new StringBuilder();
             private final StringBuilder fullThinking = new StringBuilder();
 
@@ -268,18 +281,23 @@ public class ChatViewModel extends AndroidViewModel {
                     changed = true;
                 }
                 if (chunk.message.content != null && !chunk.message.content.isEmpty()) {
+                    if (streamStartTimeMs == 0) streamStartTimeMs = System.currentTimeMillis();
+                    totalCharsReceived += chunk.message.content.length();
                     fullResponse.append(chunk.message.content);
                     changed = true;
                 }
                 if (!changed) return;
                 final String responseText = fullResponse.toString();
                 final String thinkingText = fullThinking.length() > 0 ? fullThinking.toString() : null;
+                final long elapsed = streamStartTimeMs > 0 ? System.currentTimeMillis() - streamStartTimeMs : 0;
+                final int tps = elapsed > 500 ? (int) (totalCharsReceived * 1000L / elapsed) : 0;
                 mainPoster.accept(() -> {
                     List<UiMessage> snapshot = messages.getValue();
                     if (snapshot == null) return;
                     List<UiMessage> updated = new ArrayList<>(snapshot);
                     updated.set(assistantIndex, new UiMessage(ChatMessage.ROLE_ASSISTANT, responseText, thinkingText, true));
                     messages.setValue(updated);
+                    if (tps > 0) tokensPerSecond.setValue(tps);
                 });
             }
 
@@ -297,6 +315,7 @@ public class ChatViewModel extends AndroidViewModel {
                     updated.set(assistantIndex, err);
                     messages.setValue(updated);
                     isStreaming.setValue(false);
+                    tokensPerSecond.setValue(null);
                     errorEvent.setValue(errorMsg);
                 });
             }
@@ -312,6 +331,7 @@ public class ChatViewModel extends AndroidViewModel {
                     updated.set(assistantIndex, new UiMessage(ChatMessage.ROLE_ASSISTANT, text, thinkingText, false));
                     messages.setValue(updated);
                     isStreaming.setValue(false);
+                    tokensPerSecond.setValue(null);
                     conversationRepository.insertMessage(
                             conversationId, ChatMessage.ROLE_ASSISTANT, text, null, null);
                 });
@@ -328,6 +348,7 @@ public class ChatViewModel extends AndroidViewModel {
                     updated.set(assistantIndex, new UiMessage(ChatMessage.ROLE_ASSISTANT, text, thinkingText, false));
                     messages.setValue(updated);
                     isStreaming.setValue(false);
+                    tokensPerSecond.setValue(null);
                 });
             }
         });
@@ -339,8 +360,11 @@ public class ChatViewModel extends AndroidViewModel {
         int start = Math.max(0, completed.size() - CONTEXT_WINDOW);
         List<ChatMessage> result = new ArrayList<>();
 
-        // Prepend system prompt if set
+        // Prepend system prompt: conversation-level takes priority, then global setting
         String sp = systemPrompt.getValue();
+        if (sp == null || sp.trim().isEmpty()) {
+            sp = settingsRepository.getSystemPromptGlobal();
+        }
         if (sp != null && !sp.trim().isEmpty()) {
             result.add(new ChatMessage("system", sp.trim()));
         }

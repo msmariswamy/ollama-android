@@ -33,8 +33,13 @@ public class ChatRepository {
     }
 
     public void sendMessage(String model, List<ChatMessage> messages, StreamCallback callback) {
+        sendMessage(model, messages, null, callback);
+    }
+
+    public void sendMessage(String model, List<ChatMessage> messages, ChatRequest.Options options, StreamCallback callback) {
         executor.execute(() -> {
             ChatRequest request = new ChatRequest(model, messages, true);
+            request.options = options;
             int approxChars = messages.stream().mapToInt(m -> m.content != null ? m.content.length() : 0).sum();
             Log.d(TAG, "→ POST /api/chat model=" + model
                     + " messages=" + messages.size()

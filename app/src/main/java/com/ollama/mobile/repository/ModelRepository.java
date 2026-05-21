@@ -43,7 +43,26 @@ public class ModelRepository {
         });
     }
 
+    public void fetchModelsWithMeta(MetaCallback callback) {
+        executor.execute(() -> {
+            try {
+                Response<OllamaModel.TagsResponse> response = apiService.getTags().execute();
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onResult(NetworkResult.success(response.body().models));
+                } else {
+                    callback.onResult(NetworkResult.error("Server error: " + response.code()));
+                }
+            } catch (Exception e) {
+                callback.onResult(NetworkResult.error(e.getMessage() != null ? e.getMessage() : "Network error"));
+            }
+        });
+    }
+
     public interface Callback {
         void onResult(NetworkResult<List<String>> result);
+    }
+
+    public interface MetaCallback {
+        void onResult(NetworkResult<List<OllamaModel>> result);
     }
 }

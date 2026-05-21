@@ -148,6 +148,50 @@
 
     </FrameLayout>
 
+    <!-- Streaming token counter row -->
+    <LinearLayout
+        android:id="@+id/streamingStatusRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:visibility="gone">
+
+        <View
+            android:id="@+id/dot1"
+            android:layout_width="6dp"
+            android:layout_height="6dp"
+            android:background="@drawable/circle_indicator"
+            android:layout_marginEnd="4dp"
+            android:alpha="0.3"/>
+        <View
+            android:id="@+id/dot2"
+            android:layout_width="6dp"
+            android:layout_height="6dp"
+            android:background="@drawable/circle_indicator"
+            android:layout_marginEnd="4dp"
+            android:alpha="0.3"/>
+        <View
+            android:id="@+id/dot3"
+            android:layout_width="6dp"
+            android:layout_height="6dp"
+            android:background="@drawable/circle_indicator"
+            android:layout_marginEnd="8dp"
+            android:alpha="0.3"/>
+
+        <TextView
+            android:id="@+id/tvTokenRate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="generating"
+            android:textColor="@color/colorTextMuted"
+            android:textSize="12sp"/>
+    </LinearLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/attachmentPreviewRecycler"
         android:layout_width="match_parent"

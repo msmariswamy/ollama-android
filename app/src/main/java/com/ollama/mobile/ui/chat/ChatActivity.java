@@ -215,6 +215,43 @@ public class ChatActivity extends AppCompatActivity {
         viewModel.isProcessingAttachments.observe(this, processing -> {
             binding.btnSend.setEnabled(!Boolean.TRUE.equals(processing));
         });
+
+        viewModel.tokensPerSecond.observe(this, tps -> {
+            if (tps == null) {
+                stopDotAnimation();
+                binding.streamingStatusRow.setVisibility(View.GONE);
+            } else {
+                binding.streamingStatusRow.setVisibility(View.VISIBLE);
+                binding.tvTokenRate.setText("generating · " + tps + " tok/s");
+                startDotAnimation();
+            }
+        });
+    }
+
+    private android.animation.AnimatorSet dotAnimatorSet;
+
+    private void startDotAnimation() {
+        if (dotAnimatorSet != null && dotAnimatorSet.isRunning()) return;
+        android.view.View[] dots = {binding.dot1, binding.dot2, binding.dot3};
+        List<android.animation.Animator> anims = new ArrayList<>();
+        for (int i = 0; i < dots.length; i++) {
+            android.animation.ObjectAnimator anim = android.animation.ObjectAnimator.ofFloat(
+                    dots[i], "alpha", 0.3f, 1f, 0.3f);
+            anim.setDuration(900);
+            anim.setStartDelay(i * 200L);
+            anim.setRepeatCount(android.animation.ObjectAnimator.INFINITE);
+            anims.add(anim);
+        }
+        dotAnimatorSet = new android.animation.AnimatorSet();
+        dotAnimatorSet.playTogether(anims);
+        dotAnimatorSet.start();
+    }
+
+    private void stopDotAnimation() {
+        if (dotAnimatorSet != null) {
+            dotAnimatorSet.cancel();
+            dotAnimatorSet = null;
+        }
     }
 
     private View.OnClickListener normalSendListener() {
@@ -361,13 +398,18 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_chat, menu);
-        // Observe systemPrompt to show badge on system prompt menu item
         viewModel.systemPrompt.observe(this, prompt -> {
             MenuItem item = menu.findItem(R.id.action_system_prompt);
             if (item != null) {
                 String title = (prompt != null && !prompt.trim().isEmpty())
                         ? "System Prompt ●" : "System Prompt";
                 item.setTitle(title);
+            }
+        });
+        viewModel.messages.observe(this, msgs -> {
+            MenuItem exportItem = menu.findItem(R.id.action_export);
+            if (exportItem != null) {
+                exportItem.setEnabled(msgs != null && !msgs.isEmpty());
             }
         });
         return true;
@@ -391,7 +433,50 @@ public class ChatActivity extends AppCompatActivity {
             openSystemPromptEditor();
             return true;
         }
+        if (item.getItemId() == R.id.action_export) {
+            showExportDialog();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showExportDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Export Conversation")
+                .setItems(new String[]{"Markdown (.md)", "JSON (.json)"}, (dialog, which) -> {
+                    List<UiMessage> msgs = viewModel.messages.getValue();
+                    if (msgs == null || msgs.isEmpty()) return;
+                    try {
+                        String content;
+                        String fileName;
+                        String mimeType;
+                        if (which == 0) {
+                            content = ConversationExporter.toMarkdown(msgs);
+                            fileName = "conversation.md";
+                            mimeType = "text/markdown";
+                        } else {
+                            content = ConversationExporter.toJson(msgs);
+                            fileName = "conversation.json";
+                            mimeType = "application/json";
+                        }
+                        java.io.File exportDir = new java.io.File(getCacheDir(), "exports");
+                        exportDir.mkdirs();
+                        java.io.File file = new java.io.File(exportDir, fileName);
+                        try (java.io.FileWriter writer = new java.io.FileWriter(file)) {
+                            writer.write(content);
+                        }
+                        android.net.Uri uri = androidx.core.content.FileProvider.getUriForFile(
+                                this, getPackageName() + ".fileprovider", file);
+                        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                        shareIntent.setType(mimeType);
+                        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+                        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        startActivity(Intent.createChooser(shareIntent, "Export conversation"));
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .show();
     }
 
     private void openSystemPromptEditor() {
