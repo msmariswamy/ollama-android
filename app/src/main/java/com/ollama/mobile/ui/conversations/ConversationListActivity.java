@@ -8,41 +8,39 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
-import android.widget.AdapterView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.ollama.mobile.R;
 import com.ollama.mobile.data.db.entity.Conversation;
 import com.ollama.mobile.databinding.ActivityConversationListBinding;
-import com.ollama.mobile.model.InterviewRole;
 import com.ollama.mobile.ui.chat.ChatActivity;
-import com.ollama.mobile.ui.interview.InterviewActivity;
-import com.ollama.mobile.ui.interview.InterviewHomepageViewModel;
+import com.ollama.mobile.ui.interview.InterviewSetupActivity;
+import com.ollama.mobile.ui.model.ModelLibraryActivity;
 import com.ollama.mobile.ui.settings.SettingsActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ConversationListActivity extends AppCompatActivity {
+public class ConversationListActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener {
 
     private ActivityConversationListBinding binding;
     private ConversationListViewModel viewModel;
-    private InterviewHomepageViewModel interviewViewModel;
     private ConversationAdapter adapter;
 
     private List<Conversation> latestActive = new ArrayList<>();
@@ -53,11 +51,6 @@ public class ConversationListActivity extends AppCompatActivity {
 
     private String activeFolder = "All";
 
-    private List<InterviewRole> interviewRoles = new ArrayList<>();
-    private List<String> cloudModelNames = new ArrayList<>();
-    private ArrayAdapter<String> modelSpinnerAdapter;
-    private ArrayAdapter<String> roleSpinnerAdapter;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +58,8 @@ public class ConversationListActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
         setTitle(R.string.conversations);
+
+        setupDrawer();
 
         viewModel = new ViewModelProvider(this).get(ConversationListViewModel.class);
         adapter = new ConversationAdapter(conv -> openConversation(conv.id));
@@ -86,122 +81,42 @@ public class ConversationListActivity extends AppCompatActivity {
         });
 
         binding.fabNewChat.setOnClickListener(v -> openNewChat());
-
-        setupInterviewSection();
     }
 
-    private void setupInterviewSection() {
-        interviewViewModel = new ViewModelProvider(this).get(InterviewHomepageViewModel.class);
+    private void setupDrawer() {
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, binding.drawerLayout, binding.toolbar,
+                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        binding.drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
 
-        // Expand/collapse state
-        boolean expanded = interviewViewModel.isInterviewSectionExpanded();
-        binding.interviewSectionBody.setVisibility(expanded ? View.VISIBLE : View.GONE);
-        binding.ivInterviewExpand.setRotation(expanded ? 180f : 0f);
-
-        binding.interviewSectionHeader.setOnClickListener(v -> {
-            boolean isExpanded = binding.interviewSectionBody.getVisibility() == View.VISIBLE;
-            boolean nowExpanded = !isExpanded;
-            binding.interviewSectionBody.setVisibility(nowExpanded ? View.VISIBLE : View.GONE);
-            binding.ivInterviewExpand.animate().rotation(nowExpanded ? 180f : 0f).setDuration(200).start();
-            interviewViewModel.setInterviewSectionExpanded(nowExpanded);
-        });
-
-        // Model spinner setup
-        modelSpinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, cloudModelNames);
-        modelSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        binding.spinnerInterviewModel.setAdapter(modelSpinnerAdapter);
-
-        // Role spinner setup
-        interviewRoles = interviewViewModel.loadRoles();
-        List<String> roleTitles = new ArrayList<>();
-        for (InterviewRole r : interviewRoles) roleTitles.add(r.title);
-        roleTitles.add("Custom");
-        roleSpinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, roleTitles);
-        roleSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        binding.spinnerInterviewRole.setAdapter(roleSpinnerAdapter);
-
-        binding.spinnerInterviewRole.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-                boolean isCustom = pos == interviewRoles.size();
-                binding.tilCustomRole.setVisibility(isCustom ? View.VISIBLE : View.GONE);
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
-
-        // Observe cloud models
-        interviewViewModel.getApiKeyMissing().observe(this, missing -> {
-            if (Boolean.TRUE.equals(missing)) {
-                binding.tvInterviewApiKeyWarning.setVisibility(View.VISIBLE);
-                binding.spinnerInterviewModel.setEnabled(false);
-                binding.btnStartInterviewSession.setEnabled(false);
-            } else {
-                binding.tvInterviewApiKeyWarning.setVisibility(View.GONE);
-                binding.spinnerInterviewModel.setEnabled(true);
-                binding.btnStartInterviewSession.setEnabled(true);
-            }
-        });
-
-        interviewViewModel.getCloudModels().observe(this, models -> {
-            cloudModelNames.clear();
-            if (models != null) cloudModelNames.addAll(models);
-            modelSpinnerAdapter.notifyDataSetChanged();
-
-            // Pre-select saved model
-            String saved = interviewViewModel.getSavedInterviewModel();
-            if (!saved.isEmpty()) {
-                int idx = cloudModelNames.indexOf(saved);
-                if (idx >= 0) binding.spinnerInterviewModel.setSelection(idx);
-            }
-        });
-
-        // Start Session button
-        binding.btnStartInterviewSession.setOnClickListener(v -> {
-            int modelIdx = binding.spinnerInterviewModel.getSelectedItemPosition();
-            if (cloudModelNames.isEmpty() || modelIdx < 0 || modelIdx >= cloudModelNames.size()) {
-                Snackbar.make(binding.getRoot(), "Select a cloud model first", Snackbar.LENGTH_SHORT).show();
-                return;
-            }
-            String selectedModel = cloudModelNames.get(modelIdx);
-            interviewViewModel.saveInterviewModel(selectedModel);
-
-            int roleIdx = binding.spinnerInterviewRole.getSelectedItemPosition();
-            String customName = "";
-            InterviewRole role;
-            if (roleIdx >= interviewRoles.size()) {
-                // Custom
-                customName = binding.etCustomRole.getText() != null
-                        ? binding.etCustomRole.getText().toString().trim() : "";
-                if (customName.isEmpty()) {
-                    Snackbar.make(binding.getRoot(), "Enter a custom role name", Snackbar.LENGTH_SHORT).show();
-                    return;
-                }
-                role = InterviewRole.CUSTOM;
-            } else {
-                role = interviewRoles.get(roleIdx);
-            }
-
-            Intent intent = new Intent(this, InterviewActivity.class);
-            intent.putExtra(InterviewActivity.EXTRA_ROLE_ID, role.id);
-            intent.putExtra(InterviewActivity.EXTRA_ROLE_TITLE, role.title);
-            intent.putExtra(InterviewActivity.EXTRA_ROLE_DESCRIPTION, role.description);
-            if (role.technicalSkills != null) {
-                intent.putExtra(InterviewActivity.EXTRA_ROLE_SKILLS,
-                        role.technicalSkills.toArray(new String[0]));
-            }
-            intent.putExtra(InterviewActivity.EXTRA_CUSTOM_NAME, customName);
-            intent.putExtra(InterviewActivity.EXTRA_CLOUD_MODEL, selectedModel);
-            startActivity(intent);
-        });
-
-        // Load cloud models
-        interviewViewModel.loadCloudModels();
+        binding.navigationView.setNavigationItemSelectedListener(this);
+        binding.navigationView.setCheckedItem(R.id.nav_conversations);
     }
 
-    private void updateEmptyView() {
-        boolean empty = latestActive.isEmpty() && latestArchived.isEmpty();
-        binding.tvEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.nav_conversations) {
+            // Already here — just close drawer
+        } else if (id == R.id.nav_interview) {
+            startActivity(new Intent(this, InterviewSetupActivity.class));
+        } else if (id == R.id.nav_models) {
+            startActivity(new Intent(this, ModelLibraryActivity.class));
+        } else if (id == R.id.nav_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
+        }
+        binding.drawerLayout.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
     }
 
     private boolean folderChipsInitialized = false;
@@ -277,7 +192,7 @@ public class ConversationListActivity extends AppCompatActivity {
     private void scheduleDelete(long conversationId) {
         if (pendingDelete != null) {
             deleteHandler.removeCallbacks(pendingDelete);
-            pendingDelete.run(); // commit any previously pending delete immediately
+            pendingDelete.run();
         }
         pendingDelete = () -> {
             viewModel.deleteConversation(conversationId);
@@ -303,21 +218,6 @@ public class ConversationListActivity extends AppCompatActivity {
         startActivity(new Intent(this, ChatActivity.class));
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_conversation_list, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_settings) {
-            startActivity(new Intent(this, SettingsActivity.class));
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
     // ── Swipe callback ────────────────────────────────────────────────────────
 
     private class ConversationSwipeCallback extends ItemTouchHelper.SimpleCallback {
@@ -338,7 +238,6 @@ public class ConversationListActivity extends AppCompatActivity {
 
         @Override
         public int getSwipeDirs(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh) {
-            // Disable swipe on header rows
             if (adapter.getConversationAt(vh.getAdapterPosition()) == null) return 0;
             return super.getSwipeDirs(rv, vh);
         }
@@ -356,23 +255,18 @@ public class ConversationListActivity extends AppCompatActivity {
             if (conv == null) return;
 
             if (direction == ItemTouchHelper.LEFT) {
-                // Delete with undo
                 scheduleDelete(conv.id);
                 Snackbar.make(binding.getRoot(), R.string.conversation_deleted, Snackbar.LENGTH_LONG)
                         .setAction(R.string.undo, v -> cancelDelete())
                         .addCallback(new Snackbar.Callback() {
                             @Override
-                            public void onDismissed(Snackbar sb, int event) {
-                                // pendingDelete fires on its own after 5 s via Handler
-                            }
+                            public void onDismissed(Snackbar sb, int event) {}
                         })
                         .show();
             } else {
-                // RIGHT swipe — archive or unarchive depending on current state
                 if (conv.isArchived == 1) {
                     viewModel.unarchiveConversation(conv.id);
-                    Snackbar.make(binding.getRoot(), R.string.conversation_unarchived, Snackbar.LENGTH_SHORT)
-                            .show();
+                    Snackbar.make(binding.getRoot(), R.string.conversation_unarchived, Snackbar.LENGTH_SHORT).show();
                 } else {
                     viewModel.archiveConversation(conv.id);
                     Snackbar.make(binding.getRoot(), R.string.conversation_archived, Snackbar.LENGTH_SHORT)
@@ -393,7 +287,6 @@ public class ConversationListActivity extends AppCompatActivity {
             int iconBottom = iconTop + iconSize;
 
             if (dX < 0) {
-                // Swiping left → red background, trash icon on right
                 bgPaint.setColor(Color.parseColor("#EF4444"));
                 c.drawRect(itemView.getRight() + dX, top, itemView.getRight(), bottom, bgPaint);
                 if (deleteIcon != null) {
@@ -402,7 +295,6 @@ public class ConversationListActivity extends AppCompatActivity {
                     deleteIcon.draw(c);
                 }
             } else if (dX > 0) {
-                // Swiping right → amber background, archive icon on left
                 bgPaint.setColor(Color.parseColor("#F97316"));
                 c.drawRect(itemView.getLeft(), top, itemView.getLeft() + dX, bottom, bgPaint);
                 if (archiveIcon != null) {

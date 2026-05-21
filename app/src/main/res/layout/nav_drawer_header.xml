@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="160dp"
+    android:orientation="vertical"
+    android:gravity="bottom"
+    android:padding="20dp"
+    android:background="@color/colorCard">
+
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_chat_bubble"
+        android:tint="@color/colorPrimary"
+        android:contentDescription="@null"
+        android:layout_marginBottom="10dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ollama Mobile"
+        android:textColor="@color/colorTextPrimary"
+        android:textSize="18sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Local AI, your way"
+        android:textColor="@color/colorTextMuted"
+        android:textSize="13sp"/>
+
+</LinearLayout>

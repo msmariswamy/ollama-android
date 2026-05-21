@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBackground">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorBackground"
+        app:elevation="0dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/colorBackground"
+            app:navigationIcon="@drawable/ic_close"
+            app:navigationIconTint="@color/colorTextPrimary"
+            app:title="Interview Assistant"
+            app:titleTextColor="@color/colorTextPrimary"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/colorBorder"/>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Header icon + description -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="24dp">
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_interview"
+                    android:tint="@color/colorPrimary"
+                    android:contentDescription="@null"
+                    android:layout_marginEnd="14dp"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Practice makes perfect"
+                        android:textColor="@color/colorTextPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Real-time AI coaching during your mock interview"
+                        android:textColor="@color/colorTextMuted"
+                        android:textSize="13sp"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- No API key warning -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardApiKeyWarning"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="#FFF3CD"
+                app:cardCornerRadius="10dp"
+                app:strokeWidth="0dp">
+
+                <TextView
+                    android:id="@+id/tvInterviewApiKeyWarning"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="14dp"
+                    android:text="Add an API key in Settings to use cloud models."
+                    android:textColor="#856404"
+                    android:textSize="13sp"/>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Cloud model label + spinner -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cloud Model"
+                android:textColor="@color/colorTextPrimary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="6dp"/>
+
+            <Spinner
+                android:id="@+id/spinnerInterviewModel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"/>
+
+            <!-- Role label + spinner -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Interview Role"
+                android:textColor="@color/colorTextPrimary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="6dp"/>
+
+            <Spinner
+                android:id="@+id/spinnerInterviewRole"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Custom role input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilCustomRole"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Custom role name"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_marginBottom="24dp"
+                android:visibility="gone">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etCustomRole"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:textColor="@color/colorTextPrimary"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStartInterviewSession"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Start Session"
+                android:backgroundTint="@color/colorPrimary"
+                android:textColor="@color/white"/>
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
