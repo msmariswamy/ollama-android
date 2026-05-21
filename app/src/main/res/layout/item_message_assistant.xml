@@ -66,20 +66,17 @@
                 android:textIsSelectable="true"/>
         </LinearLayout>
 
-        <!-- Main response bubble -->
-        <TextView
-            android:id="@+id/tvContent"
+        <!-- Main response area: contains Markwon TextViews and code block views -->
+        <LinearLayout
+            android:id="@+id/contentContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:background="@drawable/bubble_assistant"
             android:paddingStart="14dp"
             android:paddingEnd="14dp"
             android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:textColor="@color/colorTextPrimary"
-            android:textSize="15sp"
-            android:lineSpacingExtra="2dp"
-            android:textIsSelectable="true"/>
+            android:paddingBottom="10dp"/>
 
         <!-- Action row: Copy / Regenerate / Thumbs up / Thumbs down -->
         <LinearLayout

@@ -10,6 +10,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +21,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
 import com.ollama.mobile.R;
 import com.ollama.mobile.model.ChatMessage;
 
@@ -119,15 +121,7 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<ChatMessageAdapter.
         final String fullContent = msg.content != null ? msg.content : "";
 
         if (getItemViewType(position) == VIEW_TYPE_ASSISTANT) {
-            if (msg.isStreaming && contentEmpty) {
-                boolean hasThinking = msg.thinking != null && !msg.thinking.isEmpty();
-                holder.tvContent.setVisibility(hasThinking ? View.GONE : View.VISIBLE);
-                holder.tvContent.setText("…");
-            } else {
-                holder.tvContent.setVisibility(View.VISIBLE);
-                Markwon markwon = MarkwonProvider.get(holder.tvContent.getContext());
-                markwon.setMarkdown(holder.tvContent, fullContent);
-            }
+            bindAssistantContent(holder, msg, fullContent, contentEmpty);
 
             // Action row visibility
             if (holder.actionRow != null) {
@@ -162,12 +156,17 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<ChatMessageAdapter.
             }
         } else {
             // User message — plain text only
-            if (msg.isStreaming && contentEmpty) {
-                holder.tvContent.setVisibility(View.VISIBLE);
-                holder.tvContent.setText("…");
-            } else {
-                holder.tvContent.setVisibility(View.VISIBLE);
-                holder.tvContent.setText(fullContent);
+            if (holder.tvContent != null) {
+                if (msg.isStreaming && contentEmpty) {
+                    holder.tvContent.setVisibility(View.VISIBLE);
+                    holder.tvContent.setText("…");
+                } else {
+                    holder.tvContent.setVisibility(View.VISIBLE);
+                    holder.tvContent.setText(fullContent);
+                }
+                holder.tvContent.setTextIsSelectable(!msg.isStreaming);
+                holder.tvContent.setCustomSelectionActionModeCallback(
+                        makeCopyAllCallback(holder.tvContent.getContext(), fullContent));
             }
 
             // Show edit button when not streaming
@@ -181,15 +180,6 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<ChatMessageAdapter.
                 });
             }
         }
-
-        holder.tvContent.setTextColor(msg.isError ? 0xFFEF4444 : 0xFFF0F0FF);
-
-        // Enable native text selection when not streaming
-        holder.tvContent.setTextIsSelectable(!msg.isStreaming);
-
-        // Inject "Copy All" into the contextual action bar alongside the native Copy/Select All
-        holder.tvContent.setCustomSelectionActionModeCallback(
-                makeCopyAllCallback(holder.tvContent.getContext(), fullContent));
 
         // Thinking block: always selectable once visible
         if (holder.tvThinkingContent != null) {
@@ -233,11 +223,86 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<ChatMessageAdapter.
         }
     }
 
-    /**
-     * Returns an ActionMode.Callback that adds a "Copy All" item to the native
-     * text-selection contextual action bar. All standard items (Copy, Select All,
-     * Share…) remain intact.
-     */
+    // ── Assistant content rendering ───────────────────────────────────────────
+
+    private void bindAssistantContent(MessageViewHolder holder, UiMessage msg,
+                                      String fullContent, boolean contentEmpty) {
+        if (holder.contentContainer == null) return;
+        LinearLayout container = holder.contentContainer;
+        Context ctx = container.getContext();
+        container.removeAllViews();
+
+        // Streaming with no content yet — show ellipsis placeholder
+        if (msg.isStreaming && contentEmpty) {
+            boolean hasThinking = msg.thinking != null && !msg.thinking.isEmpty();
+            if (!hasThinking) {
+                TextView tv = makePlainTextView(ctx, msg.isError);
+                tv.setText("…");
+                container.addView(tv);
+            }
+            return;
+        }
+
+        // During streaming: skip segment parsing to avoid layout thrash; render as Markwon text
+        if (msg.isStreaming) {
+            TextView tv = makeMarkwonTextView(ctx, fullContent, msg.isError);
+            container.addView(tv);
+            return;
+        }
+
+        // Final content: segment-based rendering with proper code blocks
+        List<ContentSegment> segments = CodeBlockParser.parse(fullContent);
+        if (segments.isEmpty()) {
+            TextView tv = makePlainTextView(ctx, msg.isError);
+            tv.setText("…");
+            container.addView(tv);
+            return;
+        }
+        for (ContentSegment segment : segments) {
+            if (segment instanceof ContentSegment.Code) {
+                ContentSegment.Code cs = (ContentSegment.Code) segment;
+                View codeView = LayoutInflater.from(ctx)
+                        .inflate(R.layout.layout_code_block, container, false);
+                bindCodeBlock(codeView, cs.language, cs.code, ctx);
+                container.addView(codeView);
+            } else {
+                ContentSegment.Text ts = (ContentSegment.Text) segment;
+                TextView tv = makeMarkwonTextView(ctx, ts.markdown, msg.isError);
+                container.addView(tv);
+            }
+        }
+    }
+
+    private TextView makeMarkwonTextView(Context ctx, String markdown, boolean isError) {
+        TextView tv = makePlainTextView(ctx, isError);
+        Markwon markwon = MarkwonProvider.get(ctx);
+        markwon.setMarkdown(tv, markdown);
+        tv.setCustomSelectionActionModeCallback(makeCopyAllCallback(ctx, markdown));
+        return tv;
+    }
+
+    private TextView makePlainTextView(Context ctx, boolean isError) {
+        TextView tv = new TextView(ctx);
+        tv.setTextSize(15);
+        tv.setLineSpacing(2f, 1f);
+        tv.setTextIsSelectable(true);
+        tv.setTextColor(isError ? 0xFFEF4444 : ContextCompat.getColor(ctx, R.color.colorTextPrimary));
+        return tv;
+    }
+
+    private void bindCodeBlock(View codeView, String language, String code, Context ctx) {
+        TextView tvLang = codeView.findViewById(R.id.tvCodeLanguage);
+        TextView tvCode = codeView.findViewById(R.id.tvCodeContent);
+        MaterialButton btnCopy = codeView.findViewById(R.id.btnCopyCode);
+
+        tvLang.setText(language.isEmpty() ? "" : language);
+        tvCode.setText(code);
+
+        btnCopy.setOnClickListener(v -> copyToClipboard(ctx, code));
+    }
+
+    // ── Shared helpers ────────────────────────────────────────────────────────
+
     private ActionMode.Callback makeCopyAllCallback(Context ctx, String fullText) {
         return new ActionMode.Callback() {
             @Override
@@ -247,10 +312,7 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<ChatMessageAdapter.
                 return true;
             }
 
-            @Override
-            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-                return false;
-            }
+            @Override public boolean onPrepareActionMode(ActionMode mode, Menu menu) { return false; }
 
             @Override
             public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
@@ -262,8 +324,7 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<ChatMessageAdapter.
                 return false;
             }
 
-            @Override
-            public void onDestroyActionMode(ActionMode mode) {}
+            @Override public void onDestroyActionMode(ActionMode mode) {}
         };
     }
 
@@ -292,7 +353,10 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<ChatMessageAdapter.
     }
 
     static class MessageViewHolder extends RecyclerView.ViewHolder {
-        TextView tvContent;
+        /** For user messages only. */
+        @Nullable TextView tvContent;
+        /** For assistant messages only. */
+        @Nullable LinearLayout contentContainer;
         @Nullable View thinkingContainer;
         @Nullable TextView tvThinkingContent;
         @Nullable RecyclerView rvAttachments;
@@ -307,6 +371,7 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<ChatMessageAdapter.
         MessageViewHolder(View itemView) {
             super(itemView);
             tvContent = itemView.findViewById(R.id.tvContent);
+            contentContainer = itemView.findViewById(R.id.contentContainer);
             thinkingContainer = itemView.findViewById(R.id.tvThinking);
             tvThinkingContent = itemView.findViewById(R.id.tvThinkingContent);
             rvAttachments = itemView.findViewById(R.id.rvAttachments);

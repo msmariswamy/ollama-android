@@ -28,6 +28,12 @@
     <color name="colorError">#EF4444</color>
     <color name="colorWarning">#F59E0B</color>
 
+    <!-- Code block -->
+    <color name="colorCodeBlockBg">#1A1A19</color>
+    <color name="colorCodeBlockHeader">#2A2A28</color>
+    <color name="colorCodeText">#E8E8E2</color>
+    <color name="colorCodeLang">#A0A09A</color>
+
     <!-- Avatar palette -->
     <color name="avatarPurple">#7857FF</color>
     <color name="avatarPink">#FF5590</color>
