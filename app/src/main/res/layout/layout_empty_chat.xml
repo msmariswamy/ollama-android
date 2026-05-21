@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp">
+
+    <!-- Llama icon in rounded square card -->
+    <FrameLayout
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:background="@drawable/bg_empty_chat_icon"
+        android:layout_marginBottom="18dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="✦"
+            android:textSize="28sp"
+            android:gravity="center"
+            android:textColor="@color/colorPrimary"/>
+    </FrameLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="How can I help?"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@color/colorTextPrimary"
+        android:letterSpacing="-0.02"
+        android:layout_marginBottom="6dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Running locally · 100% private"
+        android:textSize="14sp"
+        android:textColor="@color/colorTextMuted"
+        android:layout_marginBottom="32dp"/>
+
+    <!-- Suggestion chips -->
+    <LinearLayout
+        android:id="@+id/suggestionsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:maxWidth="320dp"
+        android:layout_gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/chip0"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="✦  Brainstorm a name for…"
+            android:textSize="14sp"
+            android:textColor="@color/colorTextPrimary"
+            android:background="@drawable/bg_suggestion_chip"
+            android:padding="12dp"
+            android:layout_marginBottom="8dp"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <TextView
+            android:id="@+id/chip1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="⬡  Explain this regex to me"
+            android:textSize="14sp"
+            android:textColor="@color/colorTextPrimary"
+            android:background="@drawable/bg_suggestion_chip"
+            android:padding="12dp"
+            android:layout_marginBottom="8dp"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <TextView
+            android:id="@+id/chip2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="◎  Describe this image"
+            android:textSize="14sp"
+            android:textColor="@color/colorTextPrimary"
+            android:background="@drawable/bg_suggestion_chip"
+            android:padding="12dp"
+            android:layout_marginBottom="8dp"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <TextView
+            android:id="@+id/chip3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="✎  Rewrite this paragraph"
+            android:textSize="14sp"
+            android:textColor="@color/colorTextPrimary"
+            android:background="@drawable/bg_suggestion_chip"
+            android:padding="12dp"
+            android:clickable="true"
+            android:focusable="true"/>
+
+    </LinearLayout>
+
+</LinearLayout>

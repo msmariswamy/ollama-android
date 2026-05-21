@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Brand -->
+    <color name="colorPrimary">#7857FF</color>
+    <color name="colorPrimaryVariant">#5A3FD6</color>
+    <color name="colorSecondary">#FF5590</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+
+    <!-- Backgrounds -->
+    <color name="colorBackground">#0E0E17</color>
+    <color name="colorSurface">#16162C</color>
+    <color name="colorCard">#1D1D35</color>
+    <color name="colorBorder">#26264A</color>
+
+    <!-- Bubbles -->
+    <color name="colorUserBubble">#5A3FE8</color>
+    <color name="colorAssistantBubble">#1D1D35</color>
+
+    <!-- Text -->
+    <color name="colorTextPrimary">#F0F0FF</color>
+    <color name="colorTextMuted">#7575A0</color>
+
+    <!-- Status -->
+    <color name="colorSuccess">#22C55E</color>
+    <color name="colorError">#EF4444</color>
+    <color name="colorWarning">#F59E0B</color>
+
+    <!-- Avatar palette -->
+    <color name="avatarPurple">#7857FF</color>
+    <color name="avatarPink">#FF5590</color>
+    <color name="avatarTeal">#14B8A6</color>
+    <color name="avatarOrange">#F97316</color>
+    <color name="avatarBlue">#3B82F6</color>
+</resources>
