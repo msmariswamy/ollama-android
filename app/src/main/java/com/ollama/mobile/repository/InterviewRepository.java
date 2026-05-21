@@ -1,46 +1,43 @@
 package com.ollama.mobile.repository;
 
 import android.content.Context;
-import android.content.Intent;
-import android.media.AudioManager;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
 import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
 
 import com.google.gson.Gson;
 import com.ollama.mobile.R;
+import com.ollama.mobile.audio.AudioCaptureManager;
 import com.ollama.mobile.model.ChatMessage;
 import com.ollama.mobile.model.ChatRequest;
 import com.ollama.mobile.model.InterviewRole;
 import com.ollama.mobile.model.RolesConfig;
 import com.ollama.mobile.network.OllamaApiService;
 import com.ollama.mobile.network.OllamaClient;
+import com.ollama.mobile.whisper.WhisperContext;
+import com.ollama.mobile.whisper.WhisperModelManager;
 
-import java.util.concurrent.TimeUnit;
-
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
-
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class InterviewRepository {
 
@@ -50,19 +47,24 @@ public class InterviewRepository {
 
     private final OllamaClient ollamaClient;
     private final SettingsRepository settingsRepository;
-    private final ExecutorService executor = Executors.newCachedThreadPool();
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final ExecutorService whisperExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService coachingExecutor = Executors.newCachedThreadPool();
+    private final ExecutorService audioExecutor    = Executors.newSingleThreadExecutor();
 
-    private AudioManager audioManager;
-    private SpeechRecognizer speechRecognizer;
+    private WhisperContext whisperContext;
+    private AudioCaptureManager captureManager;
     private volatile boolean sessionActive = false;
 
     private final StringBuilder fullTranscript = new StringBuilder();
+    private final StringBuilder fullSuggestions = new StringBuilder();
     private final LinkedList<String> rollingLines = new LinkedList<>();
 
-    public final MutableLiveData<String> transcript = new MutableLiveData<>("");
-    public final MutableLiveData<String> suggestions = new MutableLiveData<>("");
+    public final MutableLiveData<String>  transcript        = new MutableLiveData<>("");
+    public final MutableLiveData<String>  suggestions       = new MutableLiveData<>("");
     public final MutableLiveData<Boolean> suggestionsLoading = new MutableLiveData<>(false);
+    public final MutableLiveData<Boolean> whisperLoading    = new MutableLiveData<>(false);
+    public final MutableLiveData<Boolean> isListening       = new MutableLiveData<>(false);
+    public final MutableLiveData<Boolean> audioReady        = new MutableLiveData<>(false);
 
     private List<InterviewRole> builtInRoles = new ArrayList<>();
 
@@ -96,87 +98,180 @@ public class InterviewRepository {
         return builtInRoles;
     }
 
-    // ── Speech Recognition ──────────────────────────────────────────────────
+    // ── Audio Capture + Whisper Transcription ───────────────────────────────
 
-    public void startListening(Context context) {
-        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
-            Log.w(TAG, "SpeechRecognizer not available on this device");
-            return;
-        }
+    private File rawPcmFile;
+    private File sessionAudioFile;
+
+    /**
+     * @param audioOutputFile WAV file to write the full session audio to (may be null).
+     *                        A temporary PCM file is used during capture; it is converted
+     *                        to WAV and deleted on stopListening().
+     */
+    public void startListening(Context context, File audioOutputFile) {
         sessionActive = true;
         fullTranscript.setLength(0);
+        fullSuggestions.setLength(0);
         rollingLines.clear();
         transcript.postValue("");
+        suggestions.postValue("");
+        audioReady.postValue(false);
+        sessionAudioFile = audioOutputFile;
+        rawPcmFile = new File(context.getCacheDir(), "session_raw.pcm");
 
-        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
-        speechRecognizer.setRecognitionListener(new InterviewRecognitionListener(context));
-        beginListening();
+        whisperLoading.postValue(true);
+        whisperExecutor.execute(() -> {
+            String savedKey = settingsRepository.getWhisperModelKey();
+            WhisperModelManager.WhisperModel model;
+            try { model = WhisperModelManager.WhisperModel.valueOf(savedKey); }
+            catch (Exception e) { model = WhisperModelManager.WhisperModel.BASE_EN; }
+            String modelPath = WhisperModelManager.getModelFile(context, model).getAbsolutePath();
+            whisperContext = WhisperContext.load(modelPath);
+            whisperLoading.postValue(false);
+
+            if (whisperContext == null) {
+                Log.e(TAG, "Failed to load Whisper model from " + modelPath);
+                return;
+            }
+
+            captureManager = new AudioCaptureManager();
+            captureManager.start(chunk -> {
+                isListening.postValue(true);
+                whisperExecutor.execute(() -> {
+                    isListening.postValue(false);
+                    if (!sessionActive || whisperContext == null) return;
+                    String text = whisperContext.transcribe(chunk);
+                    Log.d(TAG, "Whisper result: '" + text + "'");
+                    if (text != null && !isHallucination(text)) {
+                        appendUtterance(text);
+                    }
+                });
+            }, rawPcmFile);
+        });
     }
 
-    private void beginListening() {
-        if (!sessionActive) return;
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
-        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1500L);
-        intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false);
-        mainHandler.post(() -> {
-            if (sessionActive && speechRecognizer != null) {
-                if (audioManager != null) {
-                    audioManager.adjustStreamVolume(AudioManager.STREAM_NOTIFICATION, AudioManager.ADJUST_MUTE, 0);
-                }
-                speechRecognizer.startListening(intent);
-                if (audioManager != null) {
-                    mainHandler.postDelayed(() -> audioManager.adjustStreamVolume(
-                            AudioManager.STREAM_NOTIFICATION, AudioManager.ADJUST_UNMUTE, 0), 100);
+    /**
+     * Starts audio recording without Whisper transcription. Used when the Speech Recognizer
+     * engine is selected. Audio is captured to a PCM file and converted to WAV on stopListening().
+     *
+     * @param audioOutputFile WAV file to write the full session audio to (may be null).
+     */
+    public void initSpeechRecognizerSession() {
+        sessionActive = true;
+        fullTranscript.setLength(0);
+        fullSuggestions.setLength(0);
+        rollingLines.clear();
+        transcript.postValue("");
+        suggestions.postValue("");
+        audioReady.postValue(false);
+        sessionAudioFile = null;
+        rawPcmFile = null;
+    }
+
+    public void startWavRecording(Context context, File audioOutputFile) {
+        sessionActive = true;
+        fullTranscript.setLength(0);
+        fullSuggestions.setLength(0);
+        rollingLines.clear();
+        transcript.postValue("");
+        suggestions.postValue("");
+        audioReady.postValue(false);
+        sessionAudioFile = audioOutputFile;
+        rawPcmFile = new File(context.getCacheDir(), "session_raw.pcm");
+
+        captureManager = new AudioCaptureManager();
+        captureManager.start(chunk -> { /* chunks discarded — WAV file is written by captureManager */ }, rawPcmFile);
+    }
+
+    private static boolean isHallucination(String text) {
+        String t = text.trim();
+        if (t.isEmpty()) return true;
+        return t.equals("[BLANK_AUDIO]") || t.equals("[BLANK]")
+                || t.startsWith("(") || t.startsWith("[")
+                || t.equalsIgnoreCase("you") || t.equalsIgnoreCase("thank you.");
+    }
+
+    public void stopListening() {
+        sessionActive = false;
+        isListening.postValue(false);
+        if (captureManager != null) {
+            captureManager.stop();
+            captureManager = null;
+        }
+        // Free Whisper on its own executor (drain queue first)
+        whisperExecutor.execute(() -> {
+            if (whisperContext != null) {
+                whisperContext.free();
+                whisperContext = null;
+            }
+        });
+
+        // Convert PCM → WAV on a dedicated executor — independent of the Whisper backlog
+        File pcm = rawPcmFile;
+        File wav = sessionAudioFile;
+        audioExecutor.execute(() -> {
+            if (pcm != null && pcm.exists() && wav != null) {
+                try {
+                    writePcmToWav(pcm, wav, AudioCaptureManager.SAMPLE_RATE);
+                    pcm.delete();
+                    Log.d(TAG, "WAV saved: " + wav.getAbsolutePath());
+                    audioReady.postValue(true);
+                } catch (IOException e) {
+                    Log.e(TAG, "Failed to write WAV", e);
                 }
             }
         });
     }
 
-    public void stopListening() {
-        sessionActive = false;
-        if (speechRecognizer != null) {
-            mainHandler.post(() -> {
-                speechRecognizer.destroy();
-                speechRecognizer = null;
-            });
+    public File getSessionAudioFile() { return sessionAudioFile; }
+
+    // ── WAV utilities ────────────────────────────────────────────────────────
+
+    private static void writePcmToWav(File pcm, File wav, int sampleRate) throws IOException {
+        long dataSize = pcm.length();
+        try (FileInputStream in  = new FileInputStream(pcm);
+             FileOutputStream out = new FileOutputStream(wav)) {
+            writeWavHeader(out, dataSize, sampleRate);
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
         }
     }
 
-    private class InterviewRecognitionListener implements RecognitionListener {
-        private final Context context;
+    private static void writeWavHeader(OutputStream out, long dataSize, int sampleRate)
+            throws IOException {
+        int channels      = 1;
+        int bitsPerSample = 16;
+        int byteRate      = sampleRate * channels * bitsPerSample / 8;
+        int blockAlign    = channels * bitsPerSample / 8;
+        long chunkSize    = 36 + dataSize;
 
-        InterviewRecognitionListener(Context ctx) {
-            this.context = ctx;
-        }
+        out.write("RIFF".getBytes());
+        writeLe32(out, (int) chunkSize);
+        out.write("WAVE".getBytes());
+        out.write("fmt ".getBytes());
+        writeLe32(out, 16);
+        writeLe16(out, (short) 1);
+        writeLe16(out, (short) channels);
+        writeLe32(out, sampleRate);
+        writeLe32(out, byteRate);
+        writeLe16(out, (short) blockAlign);
+        writeLe16(out, (short) bitsPerSample);
+        out.write("data".getBytes());
+        writeLe32(out, (int) dataSize);
+    }
 
-        @Override
-        public void onResults(Bundle results) {
-            ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-            if (matches != null && !matches.isEmpty()) {
-                String utterance = matches.get(0).trim();
-                if (!utterance.isEmpty()) {
-                    appendUtterance(utterance);
-                }
-            }
-            // restart for continuous recognition
-            beginListening();
-        }
+    private static void writeLe32(OutputStream out, int v) throws IOException {
+        out.write(v & 0xFF); out.write((v >> 8) & 0xFF);
+        out.write((v >> 16) & 0xFF); out.write((v >> 24) & 0xFF);
+    }
 
-        @Override public void onEndOfSpeech() { /* restart happens in onResults */ }
-        @Override public void onError(int error) {
-            Log.d(TAG, "SpeechRecognizer error " + error + "; restarting");
-            mainHandler.postDelayed(() -> beginListening(), 300);
-        }
-        @Override public void onReadyForSpeech(Bundle params) {}
-        @Override public void onBeginningOfSpeech() {}
-        @Override public void onRmsChanged(float rmsdB) {}
-        @Override public void onBufferReceived(byte[] buffer) {}
-        @Override public void onPartialResults(Bundle partialResults) {}
-        @Override public void onEvent(int eventType, Bundle params) {}
+    private static void writeLe16(OutputStream out, short v) throws IOException {
+        out.write(v & 0xFF); out.write((v >> 8) & 0xFF);
+    }
+
+    public void appendFromExternal(String text) {
+        appendUtterance(text);
     }
 
     private void appendUtterance(String utterance) {
@@ -197,7 +292,7 @@ public class InterviewRepository {
         suggestionsLoading.postValue(true);
         List<String> lines = new ArrayList<>(rollingLines);
 
-        executor.execute(() -> {
+        coachingExecutor.execute(() -> {
             try {
                 String roleName = (role == InterviewRole.CUSTOM || role.id.equals("custom"))
                         ? customRoleName : role.title;
@@ -207,7 +302,15 @@ public class InterviewRepository {
                         ? "\nTechnical skills expected: " + String.join(", ", role.technicalSkills)
                         : "";
 
-                String prompt = buildCoachingPrompt(roleName, roleDescription, skillsText, lines);
+                String prompt;
+                if (role.systemPrompt != null && !role.systemPrompt.isEmpty()) {
+                    StringBuilder sb = new StringBuilder(role.systemPrompt);
+                    sb.append("\n\nRecent transcript:\n");
+                    for (String line : lines) sb.append(line).append("\n");
+                    prompt = sb.toString();
+                } else {
+                    prompt = buildCoachingPrompt(roleName, roleDescription, skillsText, lines);
+                }
 
                 List<ChatMessage> messages = new ArrayList<>();
                 messages.add(new ChatMessage(ChatMessage.ROLE_USER, prompt));
@@ -220,10 +323,17 @@ public class InterviewRepository {
                     String body = response.body().string();
                     com.google.gson.JsonObject json = com.google.gson.JsonParser.parseString(body).getAsJsonObject();
                     String content = json.getAsJsonObject("message").get("content").getAsString();
-                    suggestions.postValue(content);
+                    String timestamp = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.US)
+                            .format(new java.util.Date());
+                    if (fullSuggestions.length() > 0) fullSuggestions.append("\n\n");
+                    fullSuggestions.append("─── Coaching [").append(timestamp).append("] ───\n");
+                    fullSuggestions.append(content);
+                    suggestions.postValue(fullSuggestions.toString());
                 } else {
                     Log.e(TAG, "Coaching call failed HTTP " + response.code());
-                    suggestions.postValue("Couldn't get suggestions — check cloud connection.");
+                    String errMsg = "Couldn't get suggestions — check cloud connection.";
+                    suggestions.postValue(fullSuggestions.length() > 0
+                            ? fullSuggestions + "\n\n" + errMsg : errMsg);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Coaching call error", e);
@@ -256,15 +366,14 @@ public class InterviewRepository {
                 .create(OllamaApiService.class);
     }
 
-    private String buildCoachingPrompt(String roleName, String roleDescription, String skillsText, List<String> lines) {
+    private String buildCoachingPrompt(String roleName, String roleDescription,
+                                        String skillsText, List<String> lines) {
         StringBuilder sb = new StringBuilder();
         sb.append("You are an expert technical interviewer observing a real-time technical interview.\n");
         sb.append("Role being evaluated: ").append(roleName).append("\n");
         sb.append("Role description: ").append(roleDescription).append(skillsText).append("\n\n");
         sb.append("Recent transcript:\n");
-        for (String line : lines) {
-            sb.append(line).append("\n");
-        }
+        for (String line : lines) sb.append(line).append("\n");
         sb.append("\nRespond in under 150 words with:\n");
         sb.append("Current Topic: <topic being discussed>\n");
         sb.append("Follow-up Probes: <2-3 follow-up questions to ask>\n");
@@ -272,7 +381,6 @@ public class InterviewRepository {
         return sb.toString();
     }
 
-    public String getFullTranscript() {
-        return fullTranscript.toString();
-    }
+    public String getFullTranscript()   { return fullTranscript.toString(); }
+    public String getFullSuggestions()  { return fullSuggestions.toString(); }
 }

@@ -7,6 +7,8 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 
 import com.ollama.mobile.OllamaApp;
+import com.ollama.mobile.model.ApiProvider;
+import com.ollama.mobile.model.CustomProviderConfig;
 import com.ollama.mobile.network.HealthChecker;
 import com.ollama.mobile.network.LocalNetworkScanner;
 import com.ollama.mobile.repository.SettingsRepository;
@@ -78,15 +80,89 @@ public class SettingsViewModel extends AndroidViewModel {
     public void saveLocalUrl(String ip) {
         String url = "http://" + ip + ":11434";
         settingsRepository.setLocalBaseUrl(url);
-        settingsRepository.setMode(SettingsRepository.MODE_LOCAL);
-        ((OllamaApp) getApplication()).getAppContainer().ollamaClient.rebuild();
+        settingsRepository.setActiveProvider(ApiProvider.OLLAMA_LOCAL);
+        rebuildClients();
         checkConnection();
     }
 
     public void saveApiKey(String key) {
         settingsRepository.setApiKey(key);
         settingsRepository.setMode(SettingsRepository.MODE_CLOUD);
-        ((OllamaApp) getApplication()).getAppContainer().ollamaClient.rebuild();
+        rebuildClients();
         checkConnection();
+    }
+
+    /** Save config for a fixed provider and set it as active. */
+    public void saveProviderConfig(ApiProvider provider, String apiKey, boolean setActive) {
+        if (apiKey != null && !apiKey.isEmpty()) {
+            settingsRepository.setApiKeyForProvider(provider, apiKey);
+        }
+        if (setActive) {
+            settingsRepository.setActiveProvider(provider);
+            rebuildClients();
+            checkConnection();
+        }
+    }
+
+    // ── Custom provider list ──────────────────────────────────────────────────
+
+    public final MutableLiveData<List<CustomProviderConfig>> customProviders =
+            new MutableLiveData<>(new ArrayList<>());
+
+    public void loadCustomProviders() {
+        customProviders.postValue(settingsRepository.getCustomProviders());
+    }
+
+    /** Adds a new custom provider, selects it as active, returns the created config. */
+    public CustomProviderConfig addCustomProvider(String name, String baseUrl, String apiKey) {
+        CustomProviderConfig config = settingsRepository.addCustomProvider(name, baseUrl, apiKey);
+        settingsRepository.setActiveCustomId(config.id);
+        settingsRepository.setActiveProvider(ApiProvider.CUSTOM_OPENAI);
+        rebuildClients();
+        checkConnection();
+        loadCustomProviders();
+        return config;
+    }
+
+    /** Updates fields of an existing custom provider; if it is the active one, rebuilds clients. */
+    public void updateCustomProvider(String id, String name, String baseUrl, String apiKey) {
+        settingsRepository.updateCustomProvider(id, name, baseUrl, apiKey);
+        if (id.equals(settingsRepository.getActiveCustomId())) {
+            rebuildClients();
+            checkConnection();
+        }
+        loadCustomProviders();
+    }
+
+    public void removeCustomProvider(String id) {
+        boolean wasActive = id.equals(settingsRepository.getActiveCustomId())
+                && settingsRepository.getActiveProvider() == ApiProvider.CUSTOM_OPENAI;
+        settingsRepository.removeCustomProvider(id);
+        if (wasActive) {
+            // Fall back to first remaining custom, or Ollama Local
+            List<CustomProviderConfig> remaining = settingsRepository.getCustomProviders();
+            if (!remaining.isEmpty()) {
+                settingsRepository.setActiveCustomId(remaining.get(0).id);
+            } else {
+                settingsRepository.setActiveProvider(ApiProvider.OLLAMA_LOCAL);
+            }
+            rebuildClients();
+            checkConnection();
+        }
+        loadCustomProviders();
+    }
+
+    public void selectCustomProvider(String id) {
+        settingsRepository.setActiveCustomId(id);
+        settingsRepository.setActiveProvider(ApiProvider.CUSTOM_OPENAI);
+        rebuildClients();
+        checkConnection();
+    }
+
+    private void rebuildClients() {
+        OllamaApp app = (OllamaApp) getApplication();
+        app.getAppContainer().ollamaClient.rebuild();
+        app.getAppContainer().openAIClient.rebuild();
+        app.getAppContainer().anthropicClient.rebuild();
     }
 }

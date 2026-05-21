@@ -28,6 +28,7 @@ import com.ollama.mobile.R;
 import com.ollama.mobile.data.db.entity.Conversation;
 import com.ollama.mobile.databinding.ActivityConversationListBinding;
 import com.ollama.mobile.ui.chat.ChatActivity;
+import com.ollama.mobile.ui.interview.InterviewSessionFilesActivity;
 import com.ollama.mobile.ui.interview.InterviewSetupActivity;
 import com.ollama.mobile.ui.model.ModelLibraryActivity;
 import com.ollama.mobile.ui.settings.SettingsActivity;
@@ -101,6 +102,8 @@ public class ConversationListActivity extends AppCompatActivity
             // Already here — just close drawer
         } else if (id == R.id.nav_interview) {
             startActivity(new Intent(this, InterviewSetupActivity.class));
+        } else if (id == R.id.nav_session_files) {
+            startActivity(new Intent(this, InterviewSessionFilesActivity.class));
         } else if (id == R.id.nav_models) {
             startActivity(new Intent(this, ModelLibraryActivity.class));
         } else if (id == R.id.nav_settings) {

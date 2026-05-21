@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="6dp"
+    app:cardBackgroundColor="@color/colorCard"
+    app:cardCornerRadius="12dp"
+    app:strokeColor="@color/colorBorder"
+    app:strokeWidth="1dp"
+    app:cardElevation="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <!-- Header row: radio + name + delete -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <RadioButton
+                android:id="@+id/radioCustomProvider"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"/>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvCustomProviderName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/colorTextPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/tvCustomProviderUrl"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/colorTextMuted"
+                    android:textSize="11sp"
+                    android:ellipsize="end"
+                    android:maxLines="1"/>
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/btnDeleteCustomProvider"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_delete"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:tint="@color/colorTextMuted"
+                android:contentDescription="Delete"/>
+        </LinearLayout>
+
+        <!-- Edit fields — shown when this row is selected -->
+        <LinearLayout
+            android:id="@+id/customProviderEditFields"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginTop="12dp">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilEditCustomName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/custom_provider_name"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_marginBottom="8dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etEditCustomName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:textColor="@color/colorTextPrimary"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilEditCustomUrl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/custom_base_url"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_marginBottom="8dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etEditCustomUrl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textUri"
+                    android:textColor="@color/colorTextPrimary"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilEditCustomKey"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/api_key"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                app:passwordToggleEnabled="true"
+                android:layout_marginBottom="4dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etEditCustomKey"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:textColor="@color/colorTextPrimary"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

@@ -26,12 +26,8 @@ public class HealthChecker {
                     reqBuilder.header("Authorization", "Bearer " + apiKey);
                 }
                 try (Response response = client.newCall(reqBuilder.build()).execute()) {
-                    if (response.isSuccessful() || response.code() == 404) {
-                        // 404 is fine — Ollama root returns 404 but server is up
-                        callback.onResult(true, "Connected");
-                    } else {
-                        callback.onResult(false, "Server returned " + response.code());
-                    }
+                    // Any HTTP response means the server is reachable (Ollama returns 404, cloud APIs return 200/401/etc.)
+                    callback.onResult(true, "Connected");
                 }
             } catch (Exception e) {
                 callback.onResult(false, e.getMessage() != null ? e.getMessage() : "Unreachable");

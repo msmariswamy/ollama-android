@@ -36,4 +36,28 @@
     <string name="copied_to_clipboard">Copied to clipboard</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <!-- API Providers -->
+    <string name="api_provider">API Provider</string>
+    <string name="provider_ollama_local">Ollama Local</string>
+    <string name="provider_ollama_cloud">Ollama Cloud</string>
+    <string name="provider_openrouter">OpenRouter</string>
+    <string name="provider_grok">Grok (xAI)</string>
+    <string name="provider_claude">Claude (Anthropic)</string>
+    <string name="provider_custom">Custom (OpenAI-compatible)</string>
+    <string name="provider_ollama_local_desc">Self-hosted Ollama on your local network</string>
+    <string name="provider_ollama_cloud_desc">Ollama Cloud — ollama.com</string>
+    <string name="provider_openrouter_desc">Access 100+ models via openrouter.ai</string>
+    <string name="provider_grok_desc">Grok models via api.x.ai</string>
+    <string name="provider_claude_desc">Claude 3/4 models via Anthropic</string>
+    <string name="provider_custom_desc">Any OpenAI-compatible endpoint</string>
+    <string name="set_as_active">Set as Active</string>
+    <string name="active">Active</string>
+    <string name="custom_base_url">Base URL (e.g. https://api.groq.com/openai/v1/)</string>
+    <string name="custom_provider_name">Provider Name</string>
+    <string name="model_hint">Model name (e.g. gpt-4o, grok-2, claude-opus-4-7)</string>
+    <string name="get_openrouter_key">Get your key at openrouter.ai/keys</string>
+    <string name="get_grok_key">Get your key at console.x.ai</string>
+    <string name="get_claude_key">Get your key at console.anthropic.com</string>
+    <string name="add_provider">+ Add</string>
 </resources>

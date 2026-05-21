@@ -11,6 +11,7 @@ import com.ollama.mobile.OllamaApp;
 import com.ollama.mobile.model.InterviewRole;
 import com.ollama.mobile.network.OllamaApiService;
 import com.ollama.mobile.repository.InterviewRepository;
+import com.ollama.mobile.repository.InterviewRoleRepository;
 import com.ollama.mobile.repository.ModelRepository;
 import com.ollama.mobile.repository.SettingsRepository;
 
@@ -64,7 +65,11 @@ public class InterviewHomepageViewModel extends AndroidViewModel {
     }
 
     public List<InterviewRole> loadRoles() {
-        return interviewRepository.loadRoles(getApplication());
+        return new InterviewRoleRepository(getApplication()).loadAllRoles(getApplication());
+    }
+
+    public void deleteUserRole(String roleId, android.content.Context context) {
+        new InterviewRoleRepository(context).deleteUserRole(roleId);
     }
 
     private OllamaApiService buildCloudApiService(String apiKey) {
@@ -100,11 +105,27 @@ public class InterviewHomepageViewModel extends AndroidViewModel {
         settingsRepository.setInterviewCloudModel(model);
     }
 
+    public String getSavedWhisperModelKey() {
+        return settingsRepository.getWhisperModelKey();
+    }
+
+    public void saveWhisperModelKey(String key) {
+        settingsRepository.setWhisperModelKey(key);
+    }
+
     public boolean isInterviewSectionExpanded() {
         return settingsRepository.isInterviewSectionExpanded();
     }
 
     public void setInterviewSectionExpanded(boolean expanded) {
         settingsRepository.setInterviewSectionExpanded(expanded);
+    }
+
+    public String getTranscriptionMode() {
+        return settingsRepository.getTranscriptionMode();
+    }
+
+    public void saveTranscriptionMode(String mode) {
+        settingsRepository.setTranscriptionMode(mode);
     }
 }

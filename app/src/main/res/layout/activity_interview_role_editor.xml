@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/roleEditorRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/colorBackground">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorBackground"
+        app:navigationIconTint="@color/colorTextPrimary"
+        app:titleTextColor="@color/colorTextPrimary"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorBorder"/>
+
+    <!-- CREATE-mode name fields (GONE by default) -->
+    <LinearLayout
+        android:id="@+id/llRoleNameFields"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilRoleName"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Role name"
+            android:layout_marginBottom="12dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etRoleName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:textColor="@color/colorTextPrimary"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilRoleDescription"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Description (optional)">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etRoleDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:textColor="@color/colorTextPrimary"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </LinearLayout>
+
+    <!-- System Prompt half -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SYSTEM PROMPT"
+            android:textColor="@color/colorTextMuted"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/etSystemPrompt"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:inputType="textMultiLine"
+            android:gravity="top"
+            android:scrollbars="vertical"
+            android:background="@color/colorCard"
+            android:padding="12dp"
+            android:hint="Enter system prompt..."
+            android:textColor="@color/colorTextPrimary"
+            android:textColorHint="@color/colorTextMuted"
+            android:textSize="13sp"/>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorBorder"/>
+
+    <!-- AI Chat half -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="IMPROVE WITH AI"
+            android:textColor="@color/colorTextMuted"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"
+            android:layout_marginBottom="8dp"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvMessages"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingBottom="8dp"/>
+
+        <!-- Input row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etImproveInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Describe the improvement…"
+                android:singleLine="true"
+                android:imeOptions="actionSend"
+                android:textColor="@color/colorTextPrimary"
+                android:textColorHint="@color/colorTextMuted"
+                android:textSize="14sp"
+                android:background="@android:color/transparent"
+                android:paddingEnd="8dp"/>
+
+            <ImageButton
+                android:id="@+id/btnSend"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_send"
+                app:tint="@color/colorPrimary"
+                android:background="@android:color/transparent"
+                android:contentDescription="Send"
+                android:scaleType="center"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

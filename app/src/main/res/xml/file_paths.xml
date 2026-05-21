@@ -3,4 +3,5 @@
     <cache-path name="camera_captures" path="camera/"/>
     <cache-path name="exports" path="exports/"/>
     <external-files-path name="interview_transcripts" path="."/>
+    <files-path name="interview_sessions" path="interview_sessions/"/>
 </paths>

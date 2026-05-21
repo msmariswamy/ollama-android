@@ -14,6 +14,11 @@
             android:title="Interview Assistant"/>
 
         <item
+            android:id="@+id/nav_session_files"
+            android:icon="@drawable/ic_archive_white"
+            android:title="Interview Sessions"/>
+
+        <item
             android:id="@+id/nav_models"
             android:icon="@drawable/ic_models"
             android:title="Model Library"/>

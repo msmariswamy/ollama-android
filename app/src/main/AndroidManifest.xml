@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" android:minSdkVersion="33"/>
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" android:minSdkVersion="33"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
@@ -16,6 +17,8 @@
     <application
         android:name=".OllamaApp"
         android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
         android:theme="@style/Theme.OllamaMobile"
         android:supportsRtl="true"
@@ -40,6 +43,10 @@
             android:windowSoftInputMode="stateAlwaysVisible"/>
         <activity android:name=".ui.interview.InterviewActivity" android:exported="false"/>
         <activity android:name=".ui.interview.InterviewSetupActivity" android:exported="false"/>
+        <activity android:name=".ui.interview.InterviewSessionFilesActivity" android:exported="false"/>
+        <activity android:name=".ui.interview.InterviewSessionViewerActivity" android:exported="false"/>
+        <activity android:name=".ui.interview.InterviewRoleEditorActivity" android:exported="false"
+            android:windowSoftInputMode="adjustResize"/>
 
         <service
             android:name=".ui.interview.InterviewSessionService"

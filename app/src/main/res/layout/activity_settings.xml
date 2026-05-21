@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+<LinearLayout
+    android:id="@+id/settingsContentLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -29,11 +37,24 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Connection Mode Card -->
+            <!-- API Providers Section Header -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/api_provider"
+                android:textColor="@color/colorTextMuted"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:layout_marginBottom="8dp"
+                android:layout_marginStart="4dp"/>
+
+            <!-- Ollama Local Provider Card -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardProviderOllamaLocal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="8dp"
                 app:cardBackgroundColor="@color/colorCard"
                 app:cardCornerRadius="16dp"
                 app:strokeColor="@color/colorBorder"
@@ -46,132 +67,114 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="CONNECTION MODE"
-                        android:textColor="@color/colorTextMuted"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.08"
-                        android:layout_marginBottom="12dp"/>
-
-                    <com.google.android.material.button.MaterialButtonToggleGroup
-                        android:id="@+id/modeToggleGroup"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:singleSelection="true">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnModeLocal"
-                            style="?attr/materialButtonOutlinedStyle"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/local_mac"/>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnModeCloud"
-                            style="?attr/materialButtonOutlinedStyle"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ollama_cloud"/>
-                    </com.google.android.material.button.MaterialButtonToggleGroup>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Local Mode Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/localFields"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardBackgroundColor="@color/colorCard"
-                app:cardCornerRadius="16dp"
-                app:strokeColor="@color/colorBorder"
-                app:strokeWidth="1dp"
-                app:cardElevation="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="LOCAL SERVER"
-                        android:textColor="@color/colorTextMuted"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.08"
-                        android:layout_marginBottom="12dp"/>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilServerIp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/server_ip"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_marginBottom="12dp">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etServerIp"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textUri"
-                            android:textColor="@color/colorTextPrimary"/>
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnScanNetwork"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/scan_network"
-                        android:layout_marginBottom="8dp"/>
-
+                    <!-- Header row -->
                     <LinearLayout
-                        android:id="@+id/scanProgressLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <RadioButton
+                            android:id="@+id/radioOllamaLocal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"/>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/provider_ollama_local"
+                                android:textColor="@color/colorTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/provider_ollama_local_desc"
+                                android:textColor="@color/colorTextMuted"
+                                android:textSize="12sp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Expanded config for Ollama Local -->
+                    <LinearLayout
+                        android:id="@+id/localFields"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:visibility="gone"
-                        android:layout_marginBottom="8dp">
+                        android:layout_marginTop="12dp">
 
-                        <ProgressBar
-                            android:id="@+id/scanProgress"
-                            style="?android:attr/progressBarStyleHorizontal"
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilServerIp"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:max="254"/>
+                            android:hint="@string/server_ip"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_marginBottom="12dp">
 
-                        <TextView
-                            android:id="@+id/tvScanStatus"
-                            android:layout_width="wrap_content"
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etServerIp"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textUri"
+                                android:textColor="@color/colorTextPrimary"/>
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnScanNetwork"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/colorTextMuted"
-                            android:textSize="12sp"
-                            android:layout_marginTop="4dp"
-                            android:text="@string/scanning"/>
-                    </LinearLayout>
+                            android:text="@string/scan_network"
+                            android:layout_marginBottom="8dp"/>
 
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvFoundHosts"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:visibility="gone"/>
+                        <LinearLayout
+                            android:id="@+id/scanProgressLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:visibility="gone"
+                            android:layout_marginBottom="8dp">
+
+                            <ProgressBar
+                                android:id="@+id/scanProgress"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:max="254"/>
+
+                            <TextView
+                                android:id="@+id/tvScanStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/colorTextMuted"
+                                android:textSize="12sp"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/scanning"/>
+                        </LinearLayout>
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvFoundHosts"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:visibility="gone"/>
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Cloud Mode Card -->
+            <!-- Ollama Cloud Provider Card -->
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cloudFields"
+                android:id="@+id/cardProviderOllamaCloud"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:visibility="gone"
+                android:layout_marginBottom="8dp"
                 app:cardBackgroundColor="@color/colorCard"
                 app:cardCornerRadius="16dp"
                 app:strokeColor="@color/colorBorder"
@@ -184,41 +187,498 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="OLLAMA CLOUD"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <RadioButton
+                            android:id="@+id/radioOllamaCloud"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"/>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/provider_ollama_cloud"
+                                android:textColor="@color/colorTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/provider_ollama_cloud_desc"
+                                android:textColor="@color/colorTextMuted"
+                                android:textSize="12sp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/cloudFields"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:layout_marginTop="12dp">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilApiKey"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/api_key"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            app:passwordToggleEnabled="true"
+                            android:layout_marginBottom="6dp">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etApiKey"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textPassword"
+                                android:textColor="@color/colorTextPrimary"/>
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/get_api_key"
+                            android:textColor="@color/colorTextMuted"
+                            android:textSize="12sp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- OpenRouter Provider Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardProviderOpenRouter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                app:cardBackgroundColor="@color/colorCard"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="@color/colorBorder"
+                app:strokeWidth="1dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <RadioButton
+                            android:id="@+id/radioOpenRouter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"/>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/provider_openrouter"
+                                android:textColor="@color/colorTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/provider_openrouter_desc"
+                                android:textColor="@color/colorTextMuted"
+                                android:textSize="12sp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/openRouterFields"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:layout_marginTop="12dp">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilOpenRouterKey"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/api_key"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            app:passwordToggleEnabled="true"
+                            android:layout_marginBottom="6dp">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etOpenRouterKey"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textPassword"
+                                android:textColor="@color/colorTextPrimary"/>
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/get_openrouter_key"
+                            android:textColor="@color/colorTextMuted"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="8dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/model_hint"
+                            android:textColor="@color/colorTextMuted"
+                            android:textSize="11sp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Grok (xAI) Provider Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardProviderGrok"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                app:cardBackgroundColor="@color/colorCard"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="@color/colorBorder"
+                app:strokeWidth="1dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <RadioButton
+                            android:id="@+id/radioGrok"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"/>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/provider_grok"
+                                android:textColor="@color/colorTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/provider_grok_desc"
+                                android:textColor="@color/colorTextMuted"
+                                android:textSize="12sp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/grokFields"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:layout_marginTop="12dp">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilGrokKey"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/api_key"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            app:passwordToggleEnabled="true"
+                            android:layout_marginBottom="6dp">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etGrokKey"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textPassword"
+                                android:textColor="@color/colorTextPrimary"/>
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/get_grok_key"
+                            android:textColor="@color/colorTextMuted"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="8dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/model_hint"
+                            android:textColor="@color/colorTextMuted"
+                            android:textSize="11sp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Claude (Anthropic) Provider Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardProviderClaude"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                app:cardBackgroundColor="@color/colorCard"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="@color/colorBorder"
+                app:strokeWidth="1dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <RadioButton
+                            android:id="@+id/radioClaude"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"/>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/provider_claude"
+                                android:textColor="@color/colorTextPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/provider_claude_desc"
+                                android:textColor="@color/colorTextMuted"
+                                android:textSize="12sp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/claudeFields"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:layout_marginTop="12dp">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilClaudeKey"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/api_key"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            app:passwordToggleEnabled="true"
+                            android:layout_marginBottom="6dp">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etClaudeKey"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textPassword"
+                                android:textColor="@color/colorTextPrimary"/>
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/get_claude_key"
+                            android:textColor="@color/colorTextMuted"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="8dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/model_hint"
+                            android:textColor="@color/colorTextMuted"
+                            android:textSize="11sp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Custom OpenAI-compatible Providers Section -->
+            <LinearLayout
+                android:id="@+id/customProvidersSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp"
+                    android:layout_marginStart="4dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/provider_custom"
                         android:textColor="@color/colorTextMuted"
                         android:textSize="11sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.08"
-                        android:layout_marginBottom="12dp"/>
+                        android:letterSpacing="0.08"/>
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilApiKey"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/api_key"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        app:passwordToggleEnabled="true"
-                        android:layout_marginBottom="6dp">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etApiKey"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textPassword"
-                            android:textColor="@color/colorTextPrimary"/>
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <TextView
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnAddCustomProvider"
+                        style="?attr/materialButtonOutlinedStyle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/get_api_key"
-                        android:textColor="@color/colorTextMuted"
-                        android:textSize="12sp"/>
+                        android:text="@string/add_provider"
+                        android:textSize="12sp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"/>
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+
+                <!-- Dynamically populated custom provider rows -->
+                <LinearLayout
+                    android:id="@+id/customProvidersContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"/>
+
+                <!-- Inline add-provider form (hidden until + tapped) -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardAddCustomProvider"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="8dp"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="@color/colorCard"
+                    app:cardCornerRadius="12dp"
+                    app:strokeColor="@color/colorBorder"
+                    app:strokeWidth="1dp"
+                    app:cardElevation="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilNewCustomName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/custom_provider_name"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_marginBottom="8dp">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etNewCustomName"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="text"
+                                android:textColor="@color/colorTextPrimary"/>
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilNewCustomUrl"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/custom_base_url"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_marginBottom="8dp">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etNewCustomUrl"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textUri"
+                                android:textColor="@color/colorTextPrimary"/>
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilNewCustomKey"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/api_key"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            app:passwordToggleEnabled="true"
+                            android:layout_marginBottom="10dp">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etNewCustomKey"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textPassword"
+                                android:textColor="@color/colorTextPrimary"/>
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="end">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnCancelAddCustom"
+                                style="?attr/materialButtonOutlinedStyle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/cancel"
+                                android:layout_marginEnd="8dp"/>
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnConfirmAddCustom"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/save"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
 
             <!-- Status Card -->
             <com.google.android.material.card.MaterialCardView
@@ -553,3 +1013,14 @@
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
+
+<com.google.android.material.navigation.NavigationView
+    android:id="@+id/navigationView"
+    android:layout_width="280dp"
+    android:layout_height="match_parent"
+    android:layout_gravity="start"
+    android:fitsSystemWindows="true"
+    app:menu="@menu/nav_drawer_menu"
+    app:headerLayout="@layout/nav_drawer_header"/>
+
+</androidx.drawerlayout.widget.DrawerLayout>

@@ -1,0 +1,43 @@
+<!--
+  Android Vector Drawable — adaptive-icon foreground layer.
+  Drop into res/drawable/ as ic_launcher_foreground.xml.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.118"
+        android:scaleY="0.118"
+        android:translateX="54"
+        android:translateY="54">
+        <group
+            android:translateX="-512"
+            android:translateY="-512">
+            <!-- Left ear -->
+            <path
+                android:fillColor="#1A1A19"
+                android:pathData="M328 304 C 316 240 348 210 386 228 C 408 240 420 270 426 312 Z"/>
+            <!-- Right ear -->
+            <path
+                android:fillColor="#1A1A19"
+                android:pathData="M696 304 C 708 240 676 210 638 228 C 616 240 604 270 598 312 Z"/>
+            <!-- Chat bubble body -->
+            <path
+                android:fillColor="#1A1A19"
+                android:pathData="M512 288 C 372 288 264 374 264 496 C 264 588 326 664 418 690 L 396 766 C 388 794 416 814 442 798 L 542 738 C 666 730 760 632 760 496 C 760 374 652 288 512 288 Z"/>
+            <!-- Chevron prompt > -->
+            <path
+                android:strokeColor="#D97757"
+                android:strokeWidth="32"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round"
+                android:pathData="M 376 460 L 432 504 L 376 548"/>
+            <!-- Cursor block -->
+            <path
+                android:fillColor="#D97757"
+                android:pathData="M476 464 L560 464 Q566 464 566 470 L566 542 Q566 548 560 548 L482 548 Q476 548 476 542 L476 470 Q476 464 482 464 Z"/>
+        </group>
+    </group>
+</vector>

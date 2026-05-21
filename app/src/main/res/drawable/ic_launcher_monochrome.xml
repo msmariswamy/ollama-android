@@ -1,0 +1,37 @@
+<!--
+  Android 13+ themed icon — MONOCHROME layer.
+  Single-tone silhouette; the system tints it from the user's wallpaper.
+  Chevron prompt and cursor block are knocked out via even-odd fill.
+
+  Drop at: res/drawable/ic_launcher_monochrome.xml
+  Referenced in res/mipmap-anydpi-v26/ic_launcher.xml under <monochrome/>.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.118"
+        android:scaleY="0.118"
+        android:translateX="54"
+        android:translateY="54">
+        <group
+            android:translateX="-512"
+            android:translateY="-512">
+            <!-- Left ear -->
+            <path
+                android:fillColor="#FF000000"
+                android:pathData="M328 304 C 316 240 348 210 386 228 C 408 240 420 270 426 312 Z"/>
+            <!-- Right ear -->
+            <path
+                android:fillColor="#FF000000"
+                android:pathData="M696 304 C 708 240 676 210 638 228 C 616 240 604 270 598 312 Z"/>
+            <!-- Bubble body with chevron + cursor knocked out via even-odd -->
+            <path
+                android:fillColor="#FF000000"
+                android:fillType="evenOdd"
+                android:pathData="M512 288 C 372 288 264 374 264 496 C 264 588 326 664 418 690 L 396 766 C 388 794 416 814 442 798 L 542 738 C 666 730 760 632 760 496 C 760 374 652 288 512 288 Z M 360 460 L 416 504 L 360 548 L 392 504 Z M 476 464 L 560 464 L 560 548 L 476 548 Z"/>
+        </group>
+    </group>
+</vector>
