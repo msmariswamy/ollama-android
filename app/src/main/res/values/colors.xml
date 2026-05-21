@@ -9,19 +9,19 @@
     <color name="colorSecondary">#FF5590</color>
     <color name="colorOnPrimary">#FFFFFF</color>
 
-    <!-- Backgrounds -->
-    <color name="colorBackground">#0E0E17</color>
-    <color name="colorSurface">#16162C</color>
-    <color name="colorCard">#1D1D35</color>
-    <color name="colorBorder">#26264A</color>
+    <!-- Backgrounds (light mode) -->
+    <color name="colorBackground">#F5F5FA</color>
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorCard">#FFFFFF</color>
+    <color name="colorBorder">#E2E2EE</color>
 
-    <!-- Bubbles -->
+    <!-- Bubbles (light mode) -->
     <color name="colorUserBubble">#5A3FE8</color>
-    <color name="colorAssistantBubble">#1D1D35</color>
+    <color name="colorAssistantBubble">#F0F0F8</color>
 
-    <!-- Text -->
-    <color name="colorTextPrimary">#F0F0FF</color>
-    <color name="colorTextMuted">#7575A0</color>
+    <!-- Text (light mode) -->
+    <color name="colorTextPrimary">#0E0E17</color>
+    <color name="colorTextMuted">#6B6B90</color>
 
     <!-- Status -->
     <color name="colorSuccess">#22C55E</color>

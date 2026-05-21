@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark mode — same deep-purple palette as before -->
+    <color name="colorBackground">#0E0E17</color>
+    <color name="colorSurface">#16162C</color>
+    <color name="colorCard">#1D1D35</color>
+    <color name="colorBorder">#26264A</color>
+
+    <color name="colorUserBubble">#5A3FE8</color>
+    <color name="colorAssistantBubble">#1D1D35</color>
+
+    <color name="colorTextPrimary">#F0F0FF</color>
+    <color name="colorTextMuted">#7575A0</color>
+</resources>
