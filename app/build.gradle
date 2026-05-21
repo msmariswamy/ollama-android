@@ -71,8 +71,9 @@ dependencies {
 
     // ExecutorService (built-in Java, no dep needed)
 
-    // ML Kit Text Recognition (16.0.1+ ships 16 KB page-aligned .so files)
-    implementation 'com.google.mlkit:text-recognition:16.0.1'
+    // ML Kit Text Recognition via Play Services — model is NOT bundled in APK,
+    // avoiding the libmlkit_google_ocr_pipeline.so 16 KB alignment issue
+    implementation 'com.google.android.gms:play-services-mlkit-text-recognition:19.0.1'
 
     // Markwon — Markdown rendering into TextView via Spannables
     implementation 'io.noties.markwon:core:4.6.2'
